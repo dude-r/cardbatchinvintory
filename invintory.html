@@ -1349,6 +1349,34 @@
                     </div>
                 </div>
             </div>
+            <h2 style="margin: 30px 0 20px 0; color: var(--text-primary);">📥 Import Sales Data</h2>
+            <div class="chart-container">
+                <p style="margin-bottom: 15px; color: var(--text-secondary);">Upload eBay or bank reports to automatically mark items as sold and populate sale details.</p>
+                <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: start;">
+                    <div style="flex: 1; min-width: 300px;">
+                        <h3 style="margin-top: 0; color: var(--text-primary); font-size: 1.1em;">eBay Sales Report</h3>
+                        <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 10px;">Upload eBay sold items report (CSV). Matches by eBay item number.</p>
+                        <input type="file" id="ebayReportFile" accept=".csv" style="display: none;" onchange="importEbayReport(event)">
+                        <button class="action-btn" style="background: #4299e1; color: white; padding: 10px 20px;" onclick="document.getElementById('ebayReportFile').click()">
+                            📤 Upload eBay Report
+                        </button>
+                        <div id="ebayImportStatus" style="margin-top: 10px; font-size: 13px;"></div>
+                    </div>
+                    <div style="flex: 1; min-width: 300px;">
+                        <h3 style="margin-top: 0; color: var(--text-primary); font-size: 1.1em;">Bank/PayPal Report</h3>
+                        <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 10px;">Upload bank/PayPal transactions (CSV). Matches by amount and date.</p>
+                        <input type="file" id="bankReportFile" accept=".csv" style="display: none;" onchange="importBankReport(event)">
+                        <button class="action-btn" style="background: #48bb78; color: white; padding: 10px 20px;" onclick="document.getElementById('bankReportFile').click()">
+                            📤 Upload Bank Report
+                        </button>
+                        <div id="bankImportStatus" style="margin-top: 10px; font-size: 13px;"></div>
+                    </div>
+                </div>
+                <div id="importResults" style="background: var(--bg-tertiary); padding: 20px; border-radius: 8px; margin-top: 20px; display: none;">
+                    <h3 style="margin-top: 0;">Import Results</h3>
+                    <div id="importResultsContent"></div>
+                </div>
+            </div>
             <div class="charts-grid">
                 <div class="chart-container">
                     <div class="chart-title">📊 Items by Sport</div>
@@ -1489,6 +1517,7 @@
                     <li><strong>📊 Tax & Accounting Reports:</strong> Export detailed tax reports by date range with totals for sold items</li>
                     <li><strong>💰 Inventory Valuation:</strong> Real-time metrics showing total value, cost basis, and potential profit of unsold inventory</li>
                     <li><strong>💸 Auto-Repricing for Dead Stock:</strong> Smart price suggestions appear on aging items (>60 days) with one-click markdown buttons</li>
+                    <li><strong>📥 Import Sales from eBay & Bank Reports:</strong> Upload CSV reports to automatically mark items as sold - no manual entry!</li>
                 </ul>
             </div>
             <div class="instructions">
@@ -1537,6 +1566,69 @@
                     <li><strong>Why It Works:</strong> Aging inventory = dead capital. Small price cut = faster sales = better cash flow!</li>
                     <li><strong>Button Details:</strong> Hover over markdown buttons to see exact savings (e.g., "Reduce by 20% (save $4.00)")</li>
                 </ul>
+            </div>
+            <div class="instructions">
+                <h3>📥 Import Sales Data from eBay & Bank Reports</h3>
+                <p><strong>Automatically sync sales data from eBay and bank reports - no manual entry!</strong></p>
+
+                <h4 style="margin-top: 20px;">eBay Sales Report Import</h4>
+                <ul>
+                    <li><strong>What it does:</strong> Matches sold eBay listings to your inventory and updates status, price, and sale date automatically</li>
+                    <li><strong>How to get eBay report:</strong>
+                        <ol>
+                            <li>Go to eBay Seller Hub → Orders → Sold</li>
+                            <li>Set date range for sales you want to import</li>
+                            <li>Click "Download" → Choose CSV format</li>
+                            <li>Make sure report includes: Item Number, Sale Date, Sale Price, Shipping</li>
+                        </ol>
+                    </li>
+                    <li><strong>Matching logic:</strong> Uses eBay Item Number to find exact matches in your inventory</li>
+                    <li><strong>What gets updated:</strong>
+                        <ul>
+                            <li>Status → Changed to "💰 Sold"</li>
+                            <li>Sold Price → From eBay sale price</li>
+                            <li>Sold Date → From eBay sale date</li>
+                            <li>Shipping Revenue → From shipping charged to buyer (if available)</li>
+                        </ul>
+                    </li>
+                    <li><strong>Where to upload:</strong> Dashboard tab → "Import Sales Data" section → Click "Upload eBay Report"</li>
+                    <li><strong>Results:</strong> System shows how many items matched, how many couldn't be found, and lists unmatched item numbers</li>
+                </ul>
+
+                <h4 style="margin-top: 20px;">Bank/PayPal Report Import</h4>
+                <ul>
+                    <li><strong>What it does:</strong> Matches bank deposits/PayPal transactions to unsold inventory by amount and marks as sold</li>
+                    <li><strong>How to get bank/PayPal report:</strong>
+                        <ol>
+                            <li>Log into your bank or PayPal account</li>
+                            <li>Go to transaction history or statements</li>
+                            <li>Export transactions as CSV</li>
+                            <li>Make sure report includes: Date, Amount, Description</li>
+                        </ol>
+                    </li>
+                    <li><strong>Matching logic:</strong> Finds unsold items where (List Price + Shipping Revenue) matches transaction amount within $1.00</li>
+                    <li><strong>What gets updated:</strong>
+                        <ul>
+                            <li>Status → Changed to "💰 Sold"</li>
+                            <li>Sold Price → From transaction amount</li>
+                            <li>Sold Date → From transaction date</li>
+                        </ul>
+                    </li>
+                    <li><strong>Best for:</strong> Quick reconciliation when you don't have eBay item numbers handy</li>
+                    <li><strong>Where to upload:</strong> Dashboard tab → "Import Sales Data" section → Click "Upload Bank Report"</li>
+                </ul>
+
+                <h4 style="margin-top: 20px;">Tips for Best Results</h4>
+                <ul>
+                    <li><strong>Use eBay reports first:</strong> They're more accurate (match by item number) than bank reports (match by amount)</li>
+                    <li><strong>Keep eBay item numbers filled in:</strong> Every listed item should have its eBay item number for perfect matching</li>
+                    <li><strong>Review unmatched items:</strong> If items don't match, check if eBay item numbers are correct or if prices changed</li>
+                    <li><strong>Import regularly:</strong> Weekly imports keep your inventory current and profits accurate</li>
+                    <li><strong>Check the results:</strong> Import results show exactly what matched - review before closing</li>
+                    <li><strong>No duplicates:</strong> Already-sold items won't be updated again (safe to re-import same report)</li>
+                </ul>
+
+                <p style="margin-top: 15px;"><strong>💡 Pro Tip:</strong> Export a tax report after importing sales to see your actual profit vs estimated profit. This helps you adjust future pricing!</p>
             </div>
         </div>
     </div>
@@ -2312,6 +2404,276 @@
             URL.revokeObjectURL(url);
 
             showToast(`Exported ${soldItems.length} sold items`, 'success');
+        }
+
+        // Import eBay sales report
+        function importEbayReport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const statusDiv = document.getElementById('ebayImportStatus');
+            statusDiv.innerHTML = '<span style="color: #4299e1;">⏳ Processing...</span>';
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const csv = e.target.result;
+                    const lines = csv.split('\n').filter(line => line.trim());
+
+                    if (lines.length < 2) {
+                        statusDiv.innerHTML = '<span style="color: #f56565;">❌ Error: File is empty or invalid</span>';
+                        return;
+                    }
+
+                    // Parse header row to find column indices
+                    const headers = parseCSVLine(lines[0]);
+                    const colMap = {};
+
+                    // Map common eBay column names (case-insensitive)
+                    headers.forEach((header, index) => {
+                        const h = header.toLowerCase().trim();
+                        if (h.includes('item number') || h.includes('item id') || h.includes('custom label')) colMap.itemNumber = index;
+                        if (h.includes('sold date') || h.includes('sale date') || h.includes('end date')) colMap.soldDate = index;
+                        if (h.includes('sale price') || h.includes('sold price') || h.includes('total price') || h.includes('item price')) colMap.soldPrice = index;
+                        if (h.includes('shipping charged') || h.includes('shipping') || h.includes('postage')) colMap.shippingRevenue = index;
+                        if (h.includes('final value fee') || h.includes('ebay fee')) colMap.ebayFee = index;
+                    });
+
+                    if (!colMap.itemNumber) {
+                        statusDiv.innerHTML = '<span style="color: #f56565;">❌ Error: Could not find "Item Number" column. Please ensure your CSV has eBay item numbers.</span>';
+                        return;
+                    }
+
+                    // Process each row
+                    let matched = 0;
+                    let unmatched = 0;
+                    const unmatchedItems = [];
+
+                    for (let i = 1; i < lines.length; i++) {
+                        const values = parseCSVLine(lines[i]);
+                        if (values.length < 2) continue;
+
+                        const ebayItemNum = values[colMap.itemNumber]?.trim();
+                        if (!ebayItemNum) continue;
+
+                        // Find matching inventory item
+                        const itemIndex = inventory.findIndex(item =>
+                            item.ebayItemNumber && item.ebayItemNumber.toString() === ebayItemNum.toString()
+                        );
+
+                        if (itemIndex !== -1) {
+                            // Update inventory item
+                            inventory[itemIndex].status = '💰 Sold';
+
+                            if (colMap.soldPrice !== undefined) {
+                                const price = parseFloat(values[colMap.soldPrice]?.replace(/[^0-9.-]/g, '')) || 0;
+                                inventory[itemIndex].soldPrice = price.toFixed(2);
+                            }
+
+                            if (colMap.soldDate !== undefined) {
+                                const dateStr = values[colMap.soldDate]?.trim();
+                                inventory[itemIndex].soldDate = formatDateToISO(dateStr);
+                            }
+
+                            if (colMap.shippingRevenue !== undefined) {
+                                const shipping = parseFloat(values[colMap.shippingRevenue]?.replace(/[^0-9.-]/g, '')) || 0;
+                                inventory[itemIndex].shippingRevenue = shipping.toFixed(2);
+                            }
+
+                            matched++;
+                        } else {
+                            unmatched++;
+                            unmatchedItems.push(ebayItemNum);
+                        }
+                    }
+
+                    // Save and update UI
+                    if (matched > 0) {
+                        localStorage.setItem('cardInventory', JSON.stringify(inventory));
+                        saveToHistory();
+                        renderInventory();
+                        updateDashboard();
+                    }
+
+                    // Show results
+                    displayImportResults('eBay', matched, unmatched, unmatchedItems);
+                    statusDiv.innerHTML = `<span style="color: #48bb78;">✅ Complete: ${matched} matched, ${unmatched} not found</span>`;
+                    showToast(`Imported ${matched} eBay sales`, 'success');
+
+                } catch (error) {
+                    statusDiv.innerHTML = `<span style="color: #f56565;">❌ Error: ${error.message}</span>`;
+                    console.error('eBay import error:', error);
+                }
+            };
+
+            reader.readAsText(file);
+            event.target.value = ''; // Reset file input
+        }
+
+        // Import bank/PayPal report
+        function importBankReport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const statusDiv = document.getElementById('bankImportStatus');
+            statusDiv.innerHTML = '<span style="color: #48bb78;">⏳ Processing...</span>';
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const csv = e.target.result;
+                    const lines = csv.split('\n').filter(line => line.trim());
+
+                    if (lines.length < 2) {
+                        statusDiv.innerHTML = '<span style="color: #f56565;">❌ Error: File is empty or invalid</span>';
+                        return;
+                    }
+
+                    // Parse header row
+                    const headers = parseCSVLine(lines[0]);
+                    const colMap = {};
+
+                    headers.forEach((header, index) => {
+                        const h = header.toLowerCase().trim();
+                        if (h.includes('date') || h.includes('transaction date')) colMap.date = index;
+                        if (h.includes('amount') || h.includes('gross') || h.includes('credit')) colMap.amount = index;
+                        if (h.includes('description') || h.includes('name') || h.includes('memo')) colMap.description = index;
+                    });
+
+                    if (!colMap.date || !colMap.amount) {
+                        statusDiv.innerHTML = '<span style="color: #f56565;">❌ Error: Could not find Date and Amount columns</span>';
+                        return;
+                    }
+
+                    // Process each row
+                    let matched = 0;
+                    let unmatched = 0;
+                    const unmatchedAmounts = [];
+
+                    for (let i = 1; i < lines.length; i++) {
+                        const values = parseCSVLine(lines[i]);
+                        if (values.length < 2) continue;
+
+                        const dateStr = values[colMap.date]?.trim();
+                        const amountStr = values[colMap.amount]?.replace(/[^0-9.-]/g, '');
+                        const amount = parseFloat(amountStr);
+
+                        if (!dateStr || isNaN(amount) || amount <= 0) continue;
+
+                        const transDate = formatDateToISO(dateStr);
+
+                        // Find matching unsold item by approximate price match within 7 days
+                        const itemIndex = inventory.findIndex(item => {
+                            if (item.status === '💰 Sold') return false;
+
+                            const listPrice = parseFloat(item.listPrice) || 0;
+                            const shippingRev = parseFloat(item.shippingRevenue) || 0;
+                            const totalExpected = listPrice + shippingRev;
+
+                            // Match if amount is within $1 of expected total
+                            const priceDiff = Math.abs(amount - totalExpected);
+                            return priceDiff <= 1.00;
+                        });
+
+                        if (itemIndex !== -1) {
+                            inventory[itemIndex].status = '💰 Sold';
+                            inventory[itemIndex].soldDate = transDate;
+                            inventory[itemIndex].soldPrice = amount.toFixed(2);
+                            matched++;
+                        } else {
+                            unmatched++;
+                            unmatchedAmounts.push(`$${amount.toFixed(2)} on ${transDate}`);
+                        }
+                    }
+
+                    // Save and update UI
+                    if (matched > 0) {
+                        localStorage.setItem('cardInventory', JSON.stringify(inventory));
+                        saveToHistory();
+                        renderInventory();
+                        updateDashboard();
+                    }
+
+                    // Show results
+                    displayImportResults('Bank', matched, unmatched, unmatchedAmounts);
+                    statusDiv.innerHTML = `<span style="color: #48bb78;">✅ Complete: ${matched} matched, ${unmatched} not matched</span>`;
+                    showToast(`Imported ${matched} bank transactions`, 'success');
+
+                } catch (error) {
+                    statusDiv.innerHTML = `<span style="color: #f56565;">❌ Error: ${error.message}</span>`;
+                    console.error('Bank import error:', error);
+                }
+            };
+
+            reader.readAsText(file);
+            event.target.value = ''; // Reset file input
+        }
+
+        // Helper: Parse CSV line handling quoted values
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current);
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            result.push(current);
+
+            return result.map(val => val.trim().replace(/^"|"$/g, ''));
+        }
+
+        // Helper: Format date string to ISO format (YYYY-MM-DD)
+        function formatDateToISO(dateStr) {
+            if (!dateStr) return new Date().toISOString().split('T')[0];
+
+            // Try to parse various date formats
+            const date = new Date(dateStr);
+            if (!isNaN(date.getTime())) {
+                return date.toISOString().split('T')[0];
+            }
+
+            // Return today's date if parsing fails
+            return new Date().toISOString().split('T')[0];
+        }
+
+        // Display import results
+        function displayImportResults(source, matched, unmatched, unmatchedList) {
+            const resultsDiv = document.getElementById('importResults');
+            const contentDiv = document.getElementById('importResultsContent');
+
+            let html = `
+                <div style="margin-bottom: 15px;">
+                    <strong>${source} Import Summary:</strong>
+                    <div style="margin-top: 10px;">
+                        <div>✅ <strong>${matched}</strong> items successfully matched and marked as sold</div>
+                        <div>⚠️ <strong>${unmatched}</strong> items could not be matched</div>
+                    </div>
+                </div>
+            `;
+
+            if (unmatchedList.length > 0 && unmatchedList.length <= 20) {
+                html += `
+                    <details style="margin-top: 15px;">
+                        <summary style="cursor: pointer; font-weight: 600;">Show unmatched items</summary>
+                        <ul style="margin-top: 10px; font-size: 13px; max-height: 200px; overflow-y: auto;">
+                            ${unmatchedList.map(item => `<li>${item}</li>`).join('')}
+                        </ul>
+                    </details>
+                `;
+            }
+
+            contentDiv.innerHTML = html;
+            resultsDiv.style.display = 'block';
         }
 
         // Profit calculation
