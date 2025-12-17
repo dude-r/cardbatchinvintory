@@ -5,7 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Card Inventory Tracking System</title>
     <style>
-        /* ... (keep your existing CSS here, unchanged) ... */
+        /* CSS Variables for Dark Mode */
+        :root {
+            --bg-primary: #f5f5f5;
+            --bg-secondary: white;
+            --bg-tertiary: #f8f9fa;
+            --bg-header: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --text-primary: #333;
+            --text-secondary: #666;
+            --text-tertiary: #555;
+            --border-color: #e0e0e0;
+            --hover-bg: #f8f9fa;
+            --input-bg: white;
+            --input-border: #e0e0e0;
+            --table-hover: #f8f9fa;
+            --shadow: rgba(0,0,0,0.1);
+            --shadow-dark: rgba(0,0,0,0.3);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --bg-tertiary: #252525;
+            --bg-header: linear-gradient(135deg, #4a5fc1 0%, #5a3d7a 100%);
+            --text-primary: #e0e0e0;
+            --text-secondary: #b0b0b0;
+            --text-tertiary: #c0c0c0;
+            --border-color: #404040;
+            --hover-bg: #353535;
+            --input-bg: #2d2d2d;
+            --input-border: #404040;
+            --table-hover: #353535;
+            --shadow: rgba(0,0,0,0.3);
+            --shadow-dark: rgba(0,0,0,0.5);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -13,9 +47,10 @@
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: #f5f5f5;
-            color: #333;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
             line-height: 1.6;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
         .container {
             max-width: 1400px;
@@ -23,12 +58,13 @@
             padding: 20px;
         }
         header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--bg-header);
             color: white;
             padding: 30px 0;
             text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px var(--shadow);
             margin-bottom: 30px;
+            position: relative;
         }
         h1 {
             font-size: 2.5em;
@@ -38,20 +74,37 @@
             font-size: 1.2em;
             opacity: 0.9;
         }
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.5);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .theme-toggle:hover {
+            background: rgba(255,255,255,0.3);
+        }
         .tabs {
             display: flex;
             gap: 10px;
             margin-bottom: 30px;
-            border-bottom: 2px solid #e0e0e0;
+            border-bottom: 2px solid var(--border-color);
         }
         .tab {
             padding: 12px 24px;
-            background: white;
+            background: var(--bg-secondary);
             border: none;
             cursor: pointer;
             font-size: 16px;
             font-weight: 500;
-            color: #666;
+            color: var(--text-secondary);
             transition: all 0.3s ease;
             border-radius: 8px 8px 0 0;
         }
@@ -60,7 +113,7 @@
             color: white;
         }
         .tab:hover {
-            background: #f0f0f0;
+            background: var(--hover-bg);
         }
         .tab.active:hover {
             background: #5a67d8;
@@ -77,10 +130,10 @@
             to { opacity: 1; transform: translateY(0); }
         }
         .form-container {
-            background: white;
+            background: var(--bg-secondary);
             padding: 30px;
             border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px var(--shadow);
             max-width: 600px;
             margin: 0 auto;
         }
@@ -91,23 +144,25 @@
             display: block;
             font-weight: 600;
             margin-bottom: 8px;
-            color: #555;
+            color: var(--text-tertiary);
         }
         .required {
             color: #e53e3e;
         }
         .help-text {
             font-size: 0.9em;
-            color: #666;
+            color: var(--text-secondary);
             margin-top: 5px;
         }
         select, input, textarea {
             width: 100%;
             padding: 12px;
-            border: 2px solid #e0e0e0;
+            border: 2px solid var(--input-border);
             border-radius: 8px;
             font-size: 16px;
             transition: border-color 0.3s ease;
+            background: var(--input-bg);
+            color: var(--text-primary);
         }
         select:focus, input:focus, textarea:focus {
             outline: none;
@@ -137,14 +192,14 @@
             transform: translateY(0);
         }
         .inventory-table {
-            background: white;
+            background: var(--bg-secondary);
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px var(--shadow);
         }
         .filters {
             padding: 20px;
-            background: #f8f9fa;
+            background: var(--bg-tertiary);
             display: flex;
             gap: 15px;
             flex-wrap: wrap;
@@ -154,6 +209,10 @@
             display: flex;
             align-items: center;
             gap: 8px;
+        }
+        .search-input {
+            flex: 1;
+            min-width: 200px;
         }
         table {
             width: 100%;
@@ -168,13 +227,22 @@
             position: sticky;
             top: 0;
             z-index: 10;
+            cursor: pointer;
+            user-select: none;
+        }
+        th:hover {
+            background: #5a67d8;
+        }
+        th .sort-indicator {
+            margin-left: 5px;
+            font-size: 0.8em;
         }
         td {
             padding: 15px;
-            border-bottom: 1px solid #e0e0e0;
+            border-bottom: 1px solid var(--border-color);
         }
         tr:hover {
-            background: #f8f9fa;
+            background: var(--table-hover);
         }
         .status-badge {
             display: inline-block;
@@ -202,10 +270,10 @@
             margin-bottom: 30px;
         }
         .metric-card {
-            background: white;
+            background: var(--bg-secondary);
             padding: 25px;
             border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px var(--shadow);
             text-align: center;
             transition: transform 0.2s ease;
         }
@@ -219,7 +287,7 @@
             margin: 10px 0;
         }
         .metric-label {
-            color: #666;
+            color: var(--text-secondary);
             font-size: 1.1em;
         }
         .action-buttons {
@@ -227,6 +295,7 @@
             gap: 10px;
             justify-content: center;
             margin-top: 20px;
+            flex-wrap: wrap;
         }
         .action-btn {
             padding: 10px 20px;
@@ -270,25 +339,51 @@
         .edit-btn:hover {
             background: #3182ce;
         }
+        .qr-btn {
+            padding: 6px 12px;
+            background: #9f7aea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 5px;
+        }
+        .qr-btn:hover {
+            background: #805ad5;
+        }
+        .photo-btn {
+            padding: 6px 12px;
+            background: #ed8936;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 5px;
+        }
+        .photo-btn:hover {
+            background: #dd6b20;
+        }
         .shipping-alert {
             color: #e53e3e;
             font-weight: 600;
             font-size: 0.9em;
         }
         .instructions {
-            background: #f7fafc;
-            border: 2px solid #e2e8f0;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border-color);
             border-radius: 8px;
             padding: 20px;
             margin-bottom: 20px;
         }
         .instructions h3 {
-            color: #2d3748;
+            color: var(--text-primary);
             margin-bottom: 10px;
         }
         .instructions ul {
             margin-left: 20px;
-            color: #4a5568;
+            color: var(--text-secondary);
         }
         .instructions li {
             margin-bottom: 8px;
@@ -303,6 +398,172 @@
             text-align: center;
             font-weight: 600;
             display: none;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            padding: 20px;
+            background: var(--bg-tertiary);
+        }
+        .page-btn {
+            padding: 8px 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .page-btn:hover {
+            background: #5a67d8;
+        }
+        .page-btn:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+        }
+        .page-info {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        .bulk-actions {
+            padding: 15px 20px;
+            background: var(--bg-tertiary);
+            border-top: 2px solid var(--border-color);
+            display: none;
+            gap: 10px;
+            align-items: center;
+        }
+        .bulk-actions.active {
+            display: flex;
+        }
+        .bulk-select {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .undo-redo-btns {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+        .undo-btn, .redo-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background: #667eea;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px var(--shadow);
+            transition: all 0.3s ease;
+        }
+        .undo-btn:hover, .redo-btn:hover {
+            background: #5a67d8;
+            transform: scale(1.1);
+        }
+        .undo-btn:disabled, .redo-btn:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+            transform: scale(1);
+        }
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--bg-secondary);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px var(--shadow-dark);
+            z-index: 1000;
+            min-width: 400px;
+            max-width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal h3 {
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        .photo-preview {
+            max-width: 100%;
+            max-height: 300px;
+            margin: 10px 0;
+            border-radius: 8px;
+        }
+        .photo-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .photo-thumb {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 2px solid var(--border-color);
+        }
+        .photo-thumb:hover {
+            border-color: #667eea;
+        }
+        .storage-warning {
+            background: #fed7d7;
+            border: 2px solid #fc8181;
+            color: #742a2a;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+        .profit-positive {
+            color: #38a169;
+            font-weight: 600;
+        }
+        .profit-negative {
+            color: #e53e3e;
+            font-weight: 600;
+        }
+        @media print {
+            .tabs, .filters, .action-buttons, .bulk-actions, .undo-redo-btns, .theme-toggle, .edit-btn, .qr-btn, .photo-btn {
+                display: none !important;
+            }
+            header {
+                background: #667eea !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            body {
+                background: white;
+                color: black;
+            }
+            .inventory-table {
+                box-shadow: none;
+            }
+            th {
+                background: #667eea !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .pagination {
+                display: none !important;
+            }
         }
         @media (max-width: 768px) {
             .container {
@@ -331,11 +592,25 @@
             th, td {
                 padding: 10px;
             }
+            .theme-toggle {
+                position: static;
+                margin: 10px auto;
+                display: block;
+            }
+            .modal {
+                min-width: 90%;
+                padding: 20px;
+            }
+            .undo-redo-btns {
+                bottom: 10px;
+                right: 10px;
+            }
         }
     </style>
 </head>
 <body>
     <header>
+        <button class="theme-toggle" onclick="toggleTheme()">🌓 Toggle Theme</button>
         <h1>📦 Card Inventory Tracking System</h1>
         <p class="subtitle">Professional Trading Card Management</p>
     </header>
@@ -422,6 +697,17 @@
                         </select>
                         <p class="help-text">Who's dropping these cards?</p>
                     </div>
+                    <div class="form-group">
+                        <label for="costBasis">Cost Basis ($)</label>
+                        <input type="number" id="costBasis" step="0.01" min="0" placeholder="0.00">
+                        <p class="help-text">What did you pay for these cards?</p>
+                    </div>
+                    <div class="form-group">
+                        <label for="photos">Attach Photos (optional, max 2MB total)</label>
+                        <input type="file" id="photos" accept="image/*" multiple>
+                        <p class="help-text">Add card photos (will be stored in browser)</p>
+                        <div id="photoWarning"></div>
+                    </div>
                     <button type="submit" class="submit-btn">Submit Card Batch</button>
                 </form>
             </div>
@@ -431,7 +717,7 @@
                 <div class="filters">
                     <div class="filter-group">
                         <label for="statusFilter">Filter by Status:</label>
-                        <select id="statusFilter" onchange="filterInventory()">
+                        <select id="statusFilter" onchange="applyFilters()">
                             <option value="">All Status</option>
                             <option value="📸 Photos Taken">📸 Photos Taken</option>
                             <option value="📝 Need to Post">📝 Need to Post</option>
@@ -440,7 +726,7 @@
                     </div>
                     <div class="filter-group">
                         <label for="sportFilter">Filter by Sport:</label>
-                        <select id="sportFilter" onchange="filterInventory()">
+                        <select id="sportFilter" onchange="applyFilters()">
                             <option value="">All Sports</option>
                             <option value="Baseball">Baseball</option>
                             <option value="Basketball">Basketball</option>
@@ -452,23 +738,51 @@
                             <option value="MIXED BULK">MIXED BULK</option>
                         </select>
                     </div>
+                    <div class="filter-group search-input">
+                        <label for="searchFilter">Search:</label>
+                        <input type="text" id="searchFilter" placeholder="Search description, notes, ID..." onkeyup="applyFilters()">
+                    </div>
+                    <div class="filter-group">
+                        <label for="itemsPerPage">Items per page:</label>
+                        <select id="itemsPerPage" onchange="applyFilters()">
+                            <option value="10">10</option>
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="9999">All</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="bulk-actions" id="bulkActions">
+                    <span id="selectedCount">0 selected</span>
+                    <select id="bulkStatus">
+                        <option value="">Change Status...</option>
+                        <option value="📸 Photos Taken">📸 Photos Taken</option>
+                        <option value="📝 Need to Post">📝 Need to Post</option>
+                        <option value="✅ Listed on eBay">✅ Listed on eBay</option>
+                    </select>
+                    <button class="action-btn" style="background: #667eea; color: white;" onclick="applyBulkStatus()">Apply</button>
+                    <button class="action-btn" style="background: #a0aec0; color: white;" onclick="clearSelection()">Clear Selection</button>
                 </div>
                 <div style="overflow-x: auto;">
                     <table id="inventoryTable">
                         <thead>
                             <tr>
-                                <th>Timestamp</th>
-                                <th>Sport</th>
-                                <th>Condition</th>
-                                <th>Type</th>
-                                <th>Qty</th>
-                                <th>Description</th>
-                                <th>Status</th>
+                                <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
+                                <th onclick="sortTable('timestamp')">Timestamp <span class="sort-indicator"></span></th>
+                                <th onclick="sortTable('sport')">Sport <span class="sort-indicator"></span></th>
+                                <th onclick="sortTable('condition')">Condition <span class="sort-indicator"></span></th>
+                                <th onclick="sortTable('quantityType')">Type <span class="sort-indicator"></span></th>
+                                <th onclick="sortTable('quantity')">Qty <span class="sort-indicator"></span></th>
+                                <th onclick="sortTable('description')">Description <span class="sort-indicator"></span></th>
+                                <th onclick="sortTable('status')">Status <span class="sort-indicator"></span></th>
                                 <th>Notes</th>
                                 <th>Submitted By</th>
                                 <th>eBay Item #</th>
-                                <th>List Price</th>
+                                <th onclick="sortTable('listPrice')">List Price <span class="sort-indicator"></span></th>
+                                <th onclick="sortTable('calculatedProfit')">Profit <span class="sort-indicator"></span></th>
                                 <th>Shipping</th>
+                                <th onclick="sortTable('uniqueId')">Unique ID <span class="sort-indicator"></span></th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -477,11 +791,19 @@
                         </tbody>
                     </table>
                 </div>
+                <div class="pagination">
+                    <button class="page-btn" onclick="goToPage(1)">First</button>
+                    <button class="page-btn" onclick="goToPage(currentPage - 1)">Prev</button>
+                    <span class="page-info" id="pageInfo">Page 1 of 1</span>
+                    <button class="page-btn" onclick="goToPage(currentPage + 1)">Next</button>
+                    <button class="page-btn" onclick="goToPage(totalPages)">Last</button>
+                </div>
                 <div class="action-buttons">
                     <button class="action-btn export-btn" onclick="exportToCSV()">📥 Export to CSV</button>
                     <button class="action-btn import-btn" onclick="document.getElementById('importFile').click()">📤 Import CSV</button>
                     <input type="file" id="importFile" style="display: none;" accept=".csv" onchange="importCSV(event)">
                     <button class="action-btn clear-btn" onclick="clearAllData()">🗑️ Clear All Data</button>
+                    <button class="action-btn" style="background: #805ad5; color: white;" onclick="window.print()">🖨️ Print</button>
                 </div>
             </div>
         </div>
@@ -503,9 +825,17 @@
                     <div class="metric-label">Listed on eBay</div>
                     <div class="metric-value" id="listedOnEbay">0</div>
                 </div>
+                <div class="metric-card">
+                    <div class="metric-label">Total Profit</div>
+                    <div class="metric-value" id="totalProfit" style="font-size: 2em;">$0.00</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Avg Profit/Item</div>
+                    <div class="metric-value" id="avgProfit" style="font-size: 2em;">$0.00</div>
+                </div>
             </div>
             <div class="inventory-table">
-                <h3 style="padding: 20px; background: #f8f9fa; margin: 0;">Recent Activity (Last 10 Entries)</h3>
+                <h3 style="padding: 20px; background: var(--bg-tertiary); margin: 0;">Recent Activity (Last 10 Entries)</h3>
                 <table>
                     <thead>
                         <tr>
@@ -513,6 +843,7 @@
                             <th>Sport</th>
                             <th>Description</th>
                             <th>Status</th>
+                            <th>Profit</th>
                             <th>Submitted By</th>
                         </tr>
                     </thead>
@@ -552,18 +883,115 @@
                 </ul>
             </div>
             <div class="instructions">
+                <h3>💰 Profit Calculation</h3>
+                <ul>
+                    <li><strong>Formula:</strong> List Price - Cost Basis - (List Price × 13.25% eBay fee) - Shipping Cost</li>
+                    <li><strong>eBay Fee:</strong> Default 13.25% (editable per item)</li>
+                    <li><strong>Cost Basis:</strong> What you paid for the cards</li>
+                    <li><strong>Shipping Cost:</strong> Your actual shipping expense</li>
+                </ul>
+            </div>
+            <div class="instructions">
                 <h3>💾 Data Management</h3>
                 <ul>
                     <li><strong>Auto-Save:</strong> All entries are saved to your browser automatically</li>
                     <li><strong>Export:</strong> Download your inventory as CSV for backup or Excel use</li>
                     <li><strong>Import:</strong> Upload a CSV to restore or bulk add items</li>
                     <li><strong>Clear:</strong> Remove all data (cannot be undone!)</li>
+                    <li><strong>Undo/Redo:</strong> Use the circular buttons at bottom-right (max 50 history)</li>
+                </ul>
+            </div>
+            <div class="instructions">
+                <h3>🆕 New Features</h3>
+                <ul>
+                    <li><strong>Dark Mode:</strong> Toggle theme with button in header</li>
+                    <li><strong>Sortable Columns:</strong> Click any column header to sort</li>
+                    <li><strong>Search:</strong> Search across descriptions, notes, and unique IDs</li>
+                    <li><strong>Pagination:</strong> Choose items per page (10/25/50/100/All)</li>
+                    <li><strong>Bulk Updates:</strong> Select multiple items and change status at once</li>
+                    <li><strong>QR Codes:</strong> Generate QR codes for unique IDs</li>
+                    <li><strong>Photo Attachments:</strong> Attach photos to items (stored in browser)</li>
+                    <li><strong>Print View:</strong> Use browser print for clean inventory reports</li>
                 </ul>
             </div>
         </div>
     </div>
+    <div class="undo-redo-btns">
+        <button class="undo-btn" onclick="undo()" title="Undo">↶</button>
+        <button class="redo-btn" onclick="redo()" title="Redo">↷</button>
+    </div>
     <script>
+        // Global state
         let inventory = JSON.parse(localStorage.getItem('cardInventory')) || [];
+        let history = JSON.parse(localStorage.getItem('cardHistory')) || [];
+        let historyIndex = -1;
+        let selectedItems = new Set();
+        let currentPage = 1;
+        let totalPages = 1;
+        let sortColumn = '';
+        let sortDirection = 'asc';
+
+        // Initialize theme
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+
+        // Theme toggle
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const newTheme = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+
+        // History management
+        function saveToHistory() {
+            // Remove any "future" history if we're not at the end
+            if (historyIndex < history.length - 1) {
+                history = history.slice(0, historyIndex + 1);
+            }
+
+            // Add current state
+            history.push(JSON.stringify(inventory));
+
+            // Limit to 50 entries
+            if (history.length > 50) {
+                history.shift();
+            } else {
+                historyIndex++;
+            }
+
+            localStorage.setItem('cardHistory', JSON.stringify(history));
+            updateUndoRedoButtons();
+        }
+
+        function undo() {
+            if (historyIndex > 0) {
+                historyIndex--;
+                inventory = JSON.parse(history[historyIndex]);
+                localStorage.setItem('cardInventory', JSON.stringify(inventory));
+                renderInventory();
+                updateDashboard();
+                updateUndoRedoButtons();
+            }
+        }
+
+        function redo() {
+            if (historyIndex < history.length - 1) {
+                historyIndex++;
+                inventory = JSON.parse(history[historyIndex]);
+                localStorage.setItem('cardInventory', JSON.stringify(inventory));
+                renderInventory();
+                updateDashboard();
+                updateUndoRedoButtons();
+            }
+        }
+
+        function updateUndoRedoButtons() {
+            document.querySelector('.undo-btn').disabled = historyIndex <= 0;
+            document.querySelector('.redo-btn').disabled = historyIndex >= history.length - 1;
+        }
+
+        // Tab navigation
         function showTab(tabName, event) {
             const tabs = document.querySelectorAll('.tab');
             const contents = document.querySelectorAll('.content');
@@ -586,51 +1014,131 @@
                 updateDashboard();
             }
         }
+
+        // Dashboard updates
         function updateDashboard() {
             document.getElementById('totalItems').textContent = inventory.length;
             document.getElementById('photosTaken').textContent = inventory.filter(item => item.status === '📸 Photos Taken').length;
             document.getElementById('needToPost').textContent = inventory.filter(item => item.status === '📝 Need to Post').length;
             document.getElementById('listedOnEbay').textContent = inventory.filter(item => item.status === '✅ Listed on eBay').length;
+
+            // Calculate profit metrics
+            let totalProfit = 0;
+            let profitableItems = 0;
+            inventory.forEach(item => {
+                const profit = calculateProfit(item);
+                if (profit !== null) {
+                    totalProfit += profit;
+                    profitableItems++;
+                }
+            });
+
+            document.getElementById('totalProfit').textContent = '$' + totalProfit.toFixed(2);
+            document.getElementById('avgProfit').textContent = profitableItems > 0 ?
+                '$' + (totalProfit / profitableItems).toFixed(2) : '$0.00';
+
             const recentBody = document.getElementById('recentActivity');
             recentBody.innerHTML = '';
             const recent = inventory.slice(-10).reverse();
             recent.forEach(item => {
                 const row = recentBody.insertRow();
+                const profit = calculateProfit(item);
+                const profitDisplay = profit !== null ?
+                    `<span class="${profit >= 0 ? 'profit-positive' : 'profit-negative'}">$${profit.toFixed(2)}</span>` : '-';
                 row.innerHTML = `
                     <td>${item.timestamp}</td>
                     <td>${item.sport}</td>
                     <td>${item.description}</td>
                     <td><span class="status-badge ${getStatusClass(item.status)}">${item.status}</span></td>
+                    <td>${profitDisplay}</td>
                     <td>${item.submittedBy}</td>
                 `;
             });
         }
+
+        // Profit calculation
+        function calculateProfit(item) {
+            const listPrice = parseFloat(item.listPrice) || 0;
+            const costBasis = parseFloat(item.costBasis) || 0;
+            const shippingCost = parseFloat(item.shippingCost) || 0;
+            const feeRate = parseFloat(item.ebayFeeRate) || 13.25;
+
+            if (listPrice === 0) return null;
+
+            const ebayFee = listPrice * (feeRate / 100);
+            return listPrice - costBasis - ebayFee - shippingCost;
+        }
+
+        // Form submission
         document.getElementById('intakeForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            const formData = {
-                timestamp: new Date().toLocaleString(),
-                sport: document.getElementById('sport').value,
-                condition: document.getElementById('condition').value,
-                quantityType: document.getElementById('quantityType').value,
-                quantity: document.getElementById('quantity').value,
-                description: document.getElementById('description').value,
-                status: document.getElementById('status').value,
-                notes: document.getElementById('notes').value,
-                submittedBy: document.getElementById('submittedBy').value,
-                ebayItemNumber: '',
-                listPrice: '',
-                shippingMethod: '',
-                uniqueId: generateUniqueId()
-            };
-            inventory.push(formData);
-            localStorage.setItem('cardInventory', JSON.stringify(inventory));
-            document.getElementById('successMessage').style.display = 'block';
-            setTimeout(() => {
-                document.getElementById('successMessage').style.display = 'none';
-            }, 2000);
-            this.reset();
-            showTab('inventory');
+
+            // Check photos
+            const photoFiles = document.getElementById('photos').files;
+            const photoPromises = [];
+
+            for (let i = 0; i < photoFiles.length; i++) {
+                photoPromises.push(fileToBase64(photoFiles[i]));
+            }
+
+            Promise.all(photoPromises).then(photoDataArray => {
+                const formData = {
+                    timestamp: new Date().toLocaleString(),
+                    sport: document.getElementById('sport').value,
+                    condition: document.getElementById('condition').value,
+                    quantityType: document.getElementById('quantityType').value,
+                    quantity: document.getElementById('quantity').value,
+                    description: document.getElementById('description').value,
+                    status: document.getElementById('status').value,
+                    notes: document.getElementById('notes').value,
+                    submittedBy: document.getElementById('submittedBy').value,
+                    costBasis: document.getElementById('costBasis').value || '0',
+                    ebayItemNumber: '',
+                    listPrice: '',
+                    shippingMethod: '',
+                    shippingCost: '',
+                    ebayFeeRate: '13.25',
+                    uniqueId: generateUniqueId(),
+                    photos: photoDataArray
+                };
+
+                inventory.push(formData);
+                localStorage.setItem('cardInventory', JSON.stringify(inventory));
+                saveToHistory();
+
+                checkStorageSize();
+
+                document.getElementById('successMessage').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('successMessage').style.display = 'none';
+                }, 2000);
+                this.reset();
+                showTab('inventory');
+            });
         });
+
+        // File to base64
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Check localStorage size
+        function checkStorageSize() {
+            const size = new Blob([localStorage.getItem('cardInventory')]).size;
+            const warningEl = document.getElementById('photoWarning');
+            if (size > 2 * 1024 * 1024) { // 2MB
+                warningEl.innerHTML = '<div class="storage-warning">⚠️ Warning: Storage size exceeding 2MB. Consider exporting and clearing old photos.</div>';
+            } else {
+                warningEl.innerHTML = '';
+            }
+        }
+
+        // Generate unique ID
         function generateUniqueId() {
             const date = new Date();
             const dateStr = date.getFullYear().toString().substr(-2) +
@@ -640,19 +1148,99 @@
             const random = Math.floor(Math.random() * 1000);
             return `${dateStr}-${sport}-${random}`;
         }
+
+        // Filtering and pagination
+        function applyFilters() {
+            currentPage = 1;
+            renderInventory();
+        }
+
+        function filterInventoryData() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const sportFilter = document.getElementById('sportFilter').value;
+            const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
+
+            return inventory.filter(item => {
+                const statusMatch = !statusFilter || item.status === statusFilter;
+                const sportMatch = !sportFilter || item.sport === sportFilter;
+                const searchMatch = !searchFilter ||
+                    item.description.toLowerCase().includes(searchFilter) ||
+                    (item.notes && item.notes.toLowerCase().includes(searchFilter)) ||
+                    item.uniqueId.toLowerCase().includes(searchFilter);
+                return statusMatch && sportMatch && searchMatch;
+            });
+        }
+
+        // Sorting
+        function sortTable(column) {
+            if (sortColumn === column) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = column;
+                sortDirection = 'asc';
+            }
+            renderInventory();
+        }
+
+        function getSortedInventory(filtered) {
+            if (!sortColumn) return filtered;
+
+            return [...filtered].sort((a, b) => {
+                let aVal = a[sortColumn];
+                let bVal = b[sortColumn];
+
+                // Handle special cases
+                if (sortColumn === 'quantity' || sortColumn === 'listPrice' || sortColumn === 'calculatedProfit') {
+                    aVal = parseFloat(aVal) || 0;
+                    bVal = parseFloat(bVal) || 0;
+                    if (sortColumn === 'calculatedProfit') {
+                        aVal = calculateProfit(a) || 0;
+                        bVal = calculateProfit(b) || 0;
+                    }
+                } else {
+                    aVal = String(aVal || '').toLowerCase();
+                    bVal = String(bVal || '').toLowerCase();
+                }
+
+                if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+                if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+
+        // Render inventory
         function renderInventory() {
             const tbody = document.getElementById('inventoryBody');
-            const filteredInventory = filterInventoryData();
+            const filtered = filterInventoryData();
+            const sorted = getSortedInventory(filtered);
+
+            // Pagination
+            const itemsPerPage = parseInt(document.getElementById('itemsPerPage').value);
+            totalPages = Math.ceil(sorted.length / itemsPerPage);
+            if (currentPage > totalPages) currentPage = totalPages || 1;
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, sorted.length);
+            const pageItems = sorted.slice(startIndex, endIndex);
+
             tbody.innerHTML = '';
-            filteredInventory.forEach((item, index) => {
+            pageItems.forEach((item) => {
                 const row = tbody.insertRow();
+                const globalIndex = inventory.indexOf(item);
+
                 let shippingAlert = '';
                 if (item.condition === 'Graded (in slab)' && item.shippingMethod === 'eBay Standard Envelope') {
                     shippingAlert = '⚠️ CAN\'T USE ENVELOPE';
-                } else if (item.quantityType === 'Lot of 5+ cards' && item.shippingMethod !== 'USPS Ground') {
+                } else if (item.quantityType === 'Lot of 5+ cards' && item.shippingMethod && item.shippingMethod !== 'USPS Ground' && item.shippingMethod !== 'UPS Ground' && item.shippingMethod !== 'FedEx Ground') {
                     shippingAlert = '⚠️ MUST USE GROUND';
                 }
+
+                const profit = calculateProfit(item);
+                const profitDisplay = profit !== null ?
+                    `<span class="${profit >= 0 ? 'profit-positive' : 'profit-negative'}">$${profit.toFixed(2)}</span>` : '-';
+
                 row.innerHTML = `
+                    <td><input type="checkbox" class="item-checkbox" data-index="${globalIndex}" onchange="updateSelection()"></td>
                     <td>${item.timestamp}</td>
                     <td>${item.sport}</td>
                     <td>${item.condition}</td>
@@ -660,88 +1248,252 @@
                     <td>${item.quantity}</td>
                     <td>${item.description}</td>
                     <td><span class="status-badge ${getStatusClass(item.status)}">${item.status}</span></td>
-                    <td>${item.notes}</td>
+                    <td>${item.notes || '-'}</td>
                     <td>${item.submittedBy}</td>
                     <td>${item.ebayItemNumber || '-'}</td>
-                    <td>${item.listPrice || '-'}</td>
+                    <td>${item.listPrice ? '$' + item.listPrice : '-'}</td>
+                    <td>${profitDisplay}</td>
                     <td>
                         ${item.shippingMethod || '-'}
                         ${shippingAlert ? `<div class="shipping-alert">${shippingAlert}</div>` : ''}
                     </td>
-                    <td><button class="edit-btn" onclick="editItem(${inventory.indexOf(item)})">Edit</button></td>
+                    <td>${item.uniqueId}</td>
+                    <td>
+                        <button class="edit-btn" onclick="editItem(${globalIndex})">Edit</button>
+                        <button class="qr-btn" onclick="showQR('${item.uniqueId}')">QR</button>
+                        ${item.photos && item.photos.length > 0 ? `<button class="photo-btn" onclick="viewPhotos(${globalIndex})">📷 ${item.photos.length}</button>` : ''}
+                    </td>
                 `;
+
+                // Restore checkbox state
+                if (selectedItems.has(globalIndex)) {
+                    row.querySelector('.item-checkbox').checked = true;
+                }
             });
+
+            // Update sort indicators
+            document.querySelectorAll('th .sort-indicator').forEach(el => el.textContent = '');
+            if (sortColumn) {
+                const th = Array.from(document.querySelectorAll('th')).find(el =>
+                    el.getAttribute('onclick') && el.getAttribute('onclick').includes(sortColumn));
+                if (th) {
+                    th.querySelector('.sort-indicator').textContent = sortDirection === 'asc' ? '▲' : '▼';
+                }
+            }
+
+            // Update pagination
+            document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages || 1} (${sorted.length} items)`;
+            document.querySelector('.page-btn:nth-child(1)').disabled = currentPage === 1;
+            document.querySelector('.page-btn:nth-child(2)').disabled = currentPage === 1;
+            document.querySelector('.page-btn:nth-child(4)').disabled = currentPage === totalPages || totalPages === 0;
+            document.querySelector('.page-btn:nth-child(5)').disabled = currentPage === totalPages || totalPages === 0;
         }
-        function filterInventoryData() {
-            const statusFilter = document.getElementById('statusFilter').value;
-            const sportFilter = document.getElementById('sportFilter').value;
-            return inventory.filter(item => {
-                const statusMatch = !statusFilter || item.status === statusFilter;
-                const sportMatch = !sportFilter || item.sport === sportFilter;
-                return statusMatch && sportMatch;
+
+        function goToPage(page) {
+            if (page >= 1 && page <= totalPages) {
+                currentPage = page;
+                renderInventory();
+            }
+        }
+
+        // Bulk selection
+        function toggleSelectAll() {
+            const checkboxes = document.querySelectorAll('.item-checkbox');
+            const selectAll = document.getElementById('selectAll').checked;
+            checkboxes.forEach(cb => {
+                cb.checked = selectAll;
+                const index = parseInt(cb.dataset.index);
+                if (selectAll) {
+                    selectedItems.add(index);
+                } else {
+                    selectedItems.delete(index);
+                }
             });
+            updateSelection();
         }
-        function filterInventory() {
+
+        function updateSelection() {
+            selectedItems.clear();
+            document.querySelectorAll('.item-checkbox:checked').forEach(cb => {
+                selectedItems.add(parseInt(cb.dataset.index));
+            });
+
+            document.getElementById('selectedCount').textContent = `${selectedItems.size} selected`;
+            document.getElementById('bulkActions').classList.toggle('active', selectedItems.size > 0);
+        }
+
+        function clearSelection() {
+            selectedItems.clear();
+            document.querySelectorAll('.item-checkbox').forEach(cb => cb.checked = false);
+            document.getElementById('selectAll').checked = false;
+            updateSelection();
+        }
+
+        function applyBulkStatus() {
+            const newStatus = document.getElementById('bulkStatus').value;
+            if (!newStatus) {
+                alert('Please select a status');
+                return;
+            }
+
+            selectedItems.forEach(index => {
+                inventory[index].status = newStatus;
+            });
+
+            localStorage.setItem('cardInventory', JSON.stringify(inventory));
+            saveToHistory();
+            clearSelection();
             renderInventory();
+            updateDashboard();
         }
+
+        // Status class helper
         function getStatusClass(status) {
             if (status.includes('📸')) return 'status-photos';
             if (status.includes('📝')) return 'status-needpost';
             if (status.includes('✅')) return 'status-listed';
             return '';
         }
+
+        // Edit item
         function editItem(index) {
             const item = inventory[index];
             const editForm = `
-                <div style="padding: 20px;">
-                    <h3>Edit Item</h3>
+                <h3>Edit Item</h3>
+                <div class="form-group">
                     <label>eBay Item #:</label>
-                    <input type="text" id="edit-ebay" value="${item.ebayItemNumber || ''}" style="margin-bottom: 10px;">
-                    <label>List Price:</label>
-                    <input type="text" id="edit-price" value="${item.listPrice || ''}" style="margin-bottom: 10px;">
+                    <input type="text" id="edit-ebay" value="${item.ebayItemNumber || ''}">
+                </div>
+                <div class="form-group">
+                    <label>List Price ($):</label>
+                    <input type="number" step="0.01" id="edit-price" value="${item.listPrice || ''}">
+                </div>
+                <div class="form-group">
+                    <label>Cost Basis ($):</label>
+                    <input type="number" step="0.01" id="edit-cost" value="${item.costBasis || '0'}">
+                </div>
+                <div class="form-group">
+                    <label>eBay Fee Rate (%):</label>
+                    <input type="number" step="0.01" id="edit-fee" value="${item.ebayFeeRate || '13.25'}">
+                </div>
+                <div class="form-group">
+                    <label>Shipping Cost ($):</label>
+                    <input type="number" step="0.01" id="edit-shipping-cost" value="${item.shippingCost || ''}">
+                </div>
+                <div class="form-group">
                     <label>Shipping Method:</label>
-                    <select id="edit-shipping" style="margin-bottom: 10px;">
+                    <select id="edit-shipping">
                         <option value="">Select Shipping</option>
                         <option value="eBay Standard Envelope" ${item.shippingMethod === 'eBay Standard Envelope' ? 'selected' : ''}>eBay Standard Envelope</option>
                         <option value="USPS Ground" ${item.shippingMethod === 'USPS Ground' ? 'selected' : ''}>USPS Ground</option>
                         <option value="UPS Ground" ${item.shippingMethod === 'UPS Ground' ? 'selected' : ''}>UPS Ground</option>
                         <option value="FedEx Ground" ${item.shippingMethod === 'FedEx Ground' ? 'selected' : ''}>FedEx Ground</option>
                     </select>
+                </div>
+                <div class="form-group">
                     <label>Status:</label>
-                    <select id="edit-status" style="margin-bottom: 20px;">
+                    <select id="edit-status">
                         <option value="📸 Photos Taken" ${item.status === '📸 Photos Taken' ? 'selected' : ''}>📸 Photos Taken</option>
                         <option value="📝 Need to Post" ${item.status === '📝 Need to Post' ? 'selected' : ''}>📝 Need to Post</option>
                         <option value="✅ Listed on eBay" ${item.status === '✅ Listed on eBay' ? 'selected' : ''}>✅ Listed on eBay</option>
                     </select>
-                    <button onclick="saveEdit(${index})" class="submit-btn">Save Changes</button>
                 </div>
+                <button onclick="saveEdit(${index})" class="submit-btn">Save Changes</button>
             `;
-            const modal = document.createElement('div');
-            modal.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 1000; min-width: 400px;';
-            modal.innerHTML = editForm;
-            const overlay = document.createElement('div');
-            overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999;';
-            overlay.onclick = () => {
-                document.body.removeChild(modal);
-                document.body.removeChild(overlay);
-            };
-            document.body.appendChild(overlay);
-            document.body.appendChild(modal);
+            showModal(editForm);
         }
+
         function saveEdit(index) {
             inventory[index].ebayItemNumber = document.getElementById('edit-ebay').value;
             inventory[index].listPrice = document.getElementById('edit-price').value;
+            inventory[index].costBasis = document.getElementById('edit-cost').value;
+            inventory[index].ebayFeeRate = document.getElementById('edit-fee').value;
+            inventory[index].shippingCost = document.getElementById('edit-shipping-cost').value;
             inventory[index].shippingMethod = document.getElementById('edit-shipping').value;
             inventory[index].status = document.getElementById('edit-status').value;
             localStorage.setItem('cardInventory', JSON.stringify(inventory));
+            saveToHistory();
             renderInventory();
-            const modals = document.querySelectorAll('div[style*="position: fixed"]');
-            modals.forEach(modal => modal.remove());
+            updateDashboard();
+            closeModal();
         }
+
+        // QR Code generation (minimal SVG-based)
+        function showQR(uniqueId) {
+            const qrSVG = generateQRCode(uniqueId);
+            const qrContent = `
+                <h3>QR Code for ${uniqueId}</h3>
+                <div style="text-align: center; margin: 20px 0;">
+                    ${qrSVG}
+                </div>
+                <p style="text-align: center; margin: 10px 0;">Scan this code to identify item ${uniqueId}</p>
+                <button onclick="downloadQR('${uniqueId}')" class="submit-btn">Download QR Code</button>
+            `;
+            showModal(qrContent);
+        }
+
+        function generateQRCode(text) {
+            // Simple QR code generator using data URL encoding
+            // For production, consider using a proper QR library
+            const size = 200;
+            const encoded = encodeURIComponent(text);
+            return `<img src="https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encoded}" alt="QR Code" style="border: 2px solid var(--border-color); border-radius: 8px;">`;
+        }
+
+        function downloadQR(uniqueId) {
+            const img = document.querySelector('.modal img');
+            const a = document.createElement('a');
+            a.href = img.src;
+            a.download = `qr-${uniqueId}.png`;
+            a.click();
+        }
+
+        // Photo viewer
+        function viewPhotos(index) {
+            const item = inventory[index];
+            if (!item.photos || item.photos.length === 0) return;
+
+            let photoHTML = '<h3>Item Photos</h3><div class="photo-gallery">';
+            item.photos.forEach((photo, i) => {
+                photoHTML += `<img src="${photo}" class="photo-thumb" onclick="showFullPhoto('${photo}')" alt="Photo ${i+1}">`;
+            });
+            photoHTML += '</div>';
+
+            showModal(photoHTML);
+        }
+
+        function showFullPhoto(photoData) {
+            const content = `
+                <h3>Full Size Photo</h3>
+                <img src="${photoData}" class="photo-preview" style="max-width: 100%; max-height: 70vh;">
+            `;
+            showModal(content);
+        }
+
+        // Modal helpers
+        function showModal(content) {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = content;
+
+            const overlay = document.createElement('div');
+            overlay.className = 'overlay';
+            overlay.onclick = closeModal;
+
+            document.body.appendChild(overlay);
+            document.body.appendChild(modal);
+        }
+
+        function closeModal() {
+            document.querySelectorAll('.modal, .overlay').forEach(el => el.remove());
+        }
+
+        // CSV Export
         function exportToCSV() {
-            const headers = ['Timestamp', 'Sport', 'Condition', 'Quantity Type', 'Quantity', 'Description', 'Status', 'Notes', 'Submitted By', 'eBay Item #', 'List Price', 'Shipping Method', 'Unique ID'];
+            const headers = ['Timestamp', 'Sport', 'Condition', 'Quantity Type', 'Quantity', 'Description', 'Status', 'Notes', 'Submitted By', 'eBay Item #', 'List Price', 'Cost Basis', 'eBay Fee Rate', 'Shipping Method', 'Shipping Cost', 'Calculated Profit', 'Unique ID', 'Photo Count'];
             const csvData = [headers];
             inventory.forEach(item => {
+                const profit = calculateProfit(item);
                 csvData.push([
                     item.timestamp,
                     item.sport,
@@ -750,12 +1502,17 @@
                     item.quantity,
                     item.description,
                     item.status,
-                    item.notes,
+                    item.notes || '',
                     item.submittedBy,
-                    item.ebayItemNumber,
-                    item.listPrice,
-                    item.shippingMethod,
-                    item.uniqueId
+                    item.ebayItemNumber || '',
+                    item.listPrice || '',
+                    item.costBasis || '0',
+                    item.ebayFeeRate || '13.25',
+                    item.shippingMethod || '',
+                    item.shippingCost || '',
+                    profit !== null ? profit.toFixed(2) : '',
+                    item.uniqueId,
+                    item.photos ? item.photos.length : 0
                 ]);
             });
             const csv = csvData.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
@@ -769,6 +1526,8 @@
             a.click();
             document.body.removeChild(a);
         }
+
+        // CSV Import
         function importCSV(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -792,58 +1551,51 @@
                             submittedBy: values[8] || '',
                             ebayItemNumber: values[9] || '',
                             listPrice: values[10] || '',
-                            shippingMethod: values[11] || '',
-                            uniqueId: values[12] || generateUniqueId()
+                            costBasis: values[11] || '0',
+                            ebayFeeRate: values[12] || '13.25',
+                            shippingMethod: values[13] || '',
+                            shippingCost: values[14] || '',
+                            uniqueId: values[16] || generateUniqueId(),
+                            photos: []
                         };
                         inventory.push(item);
                     }
                 }
                 localStorage.setItem('cardInventory', JSON.stringify(inventory));
+                saveToHistory();
                 renderInventory();
                 updateDashboard();
                 alert('Import successful!');
             };
             reader.readAsText(file);
         }
+
+        // Clear all data
         function clearAllData() {
             if (confirm('Are you sure you want to clear all data? This cannot be undone!')) {
                 inventory = [];
                 localStorage.removeItem('cardInventory');
+                history = [];
+                historyIndex = -1;
+                localStorage.removeItem('cardHistory');
                 renderInventory();
                 updateDashboard();
+                updateUndoRedoButtons();
                 alert('All data has been cleared.');
             }
         }
+
+        // Initialize on load
         window.addEventListener('load', function() {
-    updateDashboard();
-    renderInventory();
-    document.getElementById('intakeForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const formData = {
-            timestamp: new Date().toLocaleString(),
-            sport: document.getElementById('sport').value,
-            condition: document.getElementById('condition').value,
-            quantityType: document.getElementById('quantityType').value,
-            quantity: document.getElementById('quantity').value,
-            description: document.getElementById('description').value,
-            status: document.getElementById('status').value,
-            notes: document.getElementById('notes').value,
-            submittedBy: document.getElementById('submittedBy').value,
-            ebayItemNumber: '',
-            listPrice: '',
-            shippingMethod: '',
-            uniqueId: generateUniqueId()
-        };
-        inventory.push(formData);
-        localStorage.setItem('cardInventory', JSON.stringify(inventory));
-        document.getElementById('successMessage').style.display = 'block';
-        setTimeout(() => {
-            document.getElementById('successMessage').style.display = 'none';
-        }, 2000);
-        this.reset();
-        showTab('inventory');
-    });
-});
+            // Initialize history if empty
+            if (history.length === 0 && inventory.length > 0) {
+                saveToHistory();
+            }
+            updateDashboard();
+            renderInventory();
+            updateUndoRedoButtons();
+            checkStorageSize();
+        });
     </script>
 </body>
 </html>
