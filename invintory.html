@@ -565,6 +565,111 @@
                 display: none !important;
             }
         }
+        .toast-container {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            padding: 16px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px var(--shadow-dark);
+            min-width: 300px;
+            max-width: 400px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.3s ease;
+            border-left: 4px solid #667eea;
+        }
+
+        .toast.success {
+            border-left-color: #48bb78;
+        }
+
+        .toast.error {
+            border-left-color: #f56565;
+        }
+
+        .toast.warning {
+            border-left-color: #ed8936;
+        }
+
+        .toast.info {
+            border-left-color: #4299e1;
+        }
+
+        .toast-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .toast-message {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 20px;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
+        .compact-view .hide-on-compact {
+            display: none !important;
+        }
+
+        .compact-view th, .compact-view td {
+            padding: 8px;
+            font-size: 13px;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 10px;
@@ -605,6 +710,14 @@
                 bottom: 10px;
                 right: 10px;
             }
+            .toast {
+                min-width: 250px;
+                max-width: calc(100vw - 40px);
+            }
+            .toast-container {
+                right: 10px;
+                left: 10px;
+            }
         }
     </style>
 </head>
@@ -623,9 +736,6 @@
         </div>
         <div id="intake" class="content active">
             <div class="form-container">
-                <div class="success-message" id="successMessage">
-                    ✅ Cards logged successfully! Form cleared for next entry.
-                </div>
                 <form id="intakeForm">
                     <div class="form-group">
                         <label for="sport">Sport <span class="required">*</span></label>
@@ -706,7 +816,6 @@
                         <label for="photos">Attach Photos (optional, max 2MB total)</label>
                         <input type="file" id="photos" accept="image/*" multiple>
                         <p class="help-text">Add card photos (will be stored in browser)</p>
-                        <div id="photoWarning"></div>
                     </div>
                     <button type="submit" class="submit-btn">Submit Card Batch</button>
                 </form>
@@ -752,6 +861,11 @@
                             <option value="9999">All</option>
                         </select>
                     </div>
+                    <div class="filter-group">
+                        <button class="action-btn" style="background: #805ad5; color: white;" onclick="toggleCompactView()" id="compactViewBtn">
+                            📱 Compact View
+                        </button>
+                    </div>
                 </div>
                 <div class="bulk-actions" id="bulkActions">
                     <span id="selectedCount">0 selected</span>
@@ -769,20 +883,20 @@
                         <thead>
                             <tr>
                                 <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
-                                <th onclick="sortTable('timestamp')">Timestamp <span class="sort-indicator"></span></th>
+                                <th class="hide-on-compact" onclick="sortTable('timestamp')">Timestamp <span class="sort-indicator"></span></th>
                                 <th onclick="sortTable('sport')">Sport <span class="sort-indicator"></span></th>
-                                <th onclick="sortTable('condition')">Condition <span class="sort-indicator"></span></th>
+                                <th class="hide-on-compact" onclick="sortTable('condition')">Condition <span class="sort-indicator"></span></th>
                                 <th onclick="sortTable('quantityType')">Type <span class="sort-indicator"></span></th>
                                 <th onclick="sortTable('quantity')">Qty <span class="sort-indicator"></span></th>
                                 <th onclick="sortTable('description')">Description <span class="sort-indicator"></span></th>
                                 <th onclick="sortTable('status')">Status <span class="sort-indicator"></span></th>
-                                <th>Notes</th>
-                                <th>Submitted By</th>
-                                <th>eBay Item #</th>
+                                <th class="hide-on-compact">Notes</th>
+                                <th class="hide-on-compact">Submitted By</th>
+                                <th class="hide-on-compact">eBay Item #</th>
                                 <th onclick="sortTable('listPrice')">List Price <span class="sort-indicator"></span></th>
                                 <th onclick="sortTable('calculatedProfit')">Profit <span class="sort-indicator"></span></th>
-                                <th>Shipping</th>
-                                <th onclick="sortTable('uniqueId')">Unique ID <span class="sort-indicator"></span></th>
+                                <th class="hide-on-compact">Shipping</th>
+                                <th class="hide-on-compact" onclick="sortTable('uniqueId')">Unique ID <span class="sort-indicator"></span></th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -941,6 +1055,104 @@
             const newTheme = current === 'dark' ? 'light' : 'dark';
             document.documentElement.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
+        }
+
+        // Toast notification system
+        function showToast(message, type = 'info', duration = 3000, title = null) {
+            const container = document.getElementById('toast-container') || createToastContainer();
+
+            const icons = {
+                success: '✓',
+                error: '✕',
+                warning: '⚠',
+                info: 'ℹ'
+            };
+
+            const titles = {
+                success: title || 'Success',
+                error: title || 'Error',
+                warning: title || 'Warning',
+                info: title || 'Info'
+            };
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <div class="toast-icon">${icons[type]}</div>
+                <div class="toast-content">
+                    <div class="toast-title">${titles[type]}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+                <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
+        function createToastContainer() {
+            const container = document.createElement('div');
+            container.id = 'toast-container';
+            container.className = 'toast-container';
+            document.body.appendChild(container);
+            return container;
+        }
+
+        // Confirmation toast (replacement for confirm())
+        function showConfirm(message, onConfirm, title = 'Confirm') {
+            const container = document.getElementById('toast-container') || createToastContainer();
+
+            const toast = document.createElement('div');
+            toast.className = 'toast warning';
+            toast.innerHTML = `
+                <div class="toast-icon">?</div>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                    <div style="margin-top: 10px; display: flex; gap: 8px;">
+                        <button class="action-btn" style="flex: 1; padding: 6px 12px; background: #48bb78; color: white;" onclick="document.getElementById('confirm-yes').click()">Yes</button>
+                        <button class="action-btn" style="flex: 1; padding: 6px 12px; background: #a0aec0; color: white;" onclick="this.closest('.toast').remove()">Cancel</button>
+                    </div>
+                </div>
+                <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+                <button id="confirm-yes" style="display: none;"></button>
+            `;
+
+            toast.querySelector('#confirm-yes').onclick = () => {
+                onConfirm();
+                toast.remove();
+            };
+
+            container.appendChild(toast);
+        }
+
+        // Compact view toggle
+        let isCompactView = localStorage.getItem('compactView') === 'true';
+
+        function toggleCompactView() {
+            isCompactView = !isCompactView;
+            localStorage.setItem('compactView', isCompactView);
+            applyCompactView();
+            showToast(isCompactView ? 'Compact view enabled' : 'Full view enabled', 'info');
+        }
+
+        function applyCompactView() {
+            const table = document.querySelector('#inventoryTable');
+            const btn = document.getElementById('compactViewBtn');
+
+            if (table && btn) {
+                if (isCompactView) {
+                    table.classList.add('compact-view');
+                    btn.textContent = '📱 Full View';
+                } else {
+                    table.classList.remove('compact-view');
+                    btn.textContent = '📱 Compact View';
+                }
+            }
         }
 
         // History management
@@ -1108,10 +1320,7 @@
 
                 checkStorageSize();
 
-                document.getElementById('successMessage').style.display = 'block';
-                setTimeout(() => {
-                    document.getElementById('successMessage').style.display = 'none';
-                }, 2000);
+                showToast('Cards logged successfully! Form cleared for next entry.', 'success');
                 this.reset();
                 showTab('inventory');
             });
@@ -1130,11 +1339,8 @@
         // Check localStorage size
         function checkStorageSize() {
             const size = new Blob([localStorage.getItem('cardInventory')]).size;
-            const warningEl = document.getElementById('photoWarning');
             if (size > 2 * 1024 * 1024) { // 2MB
-                warningEl.innerHTML = '<div class="storage-warning">⚠️ Warning: Storage size exceeding 2MB. Consider exporting and clearing old photos.</div>';
-            } else {
-                warningEl.innerHTML = '';
+                showToast('Storage size exceeding 2MB. Consider exporting and clearing old photos.', 'warning', 5000);
             }
         }
 
@@ -1241,23 +1447,23 @@
 
                 row.innerHTML = `
                     <td><input type="checkbox" class="item-checkbox" data-index="${globalIndex}" onchange="updateSelection()"></td>
-                    <td>${item.timestamp}</td>
+                    <td class="hide-on-compact">${item.timestamp}</td>
                     <td>${item.sport}</td>
-                    <td>${item.condition}</td>
+                    <td class="hide-on-compact">${item.condition}</td>
                     <td>${item.quantityType}</td>
                     <td>${item.quantity}</td>
                     <td>${item.description}</td>
                     <td><span class="status-badge ${getStatusClass(item.status)}">${item.status}</span></td>
-                    <td>${item.notes || '-'}</td>
-                    <td>${item.submittedBy}</td>
-                    <td>${item.ebayItemNumber || '-'}</td>
+                    <td class="hide-on-compact">${item.notes || '-'}</td>
+                    <td class="hide-on-compact">${item.submittedBy}</td>
+                    <td class="hide-on-compact">${item.ebayItemNumber || '-'}</td>
                     <td>${item.listPrice ? '$' + item.listPrice : '-'}</td>
                     <td>${profitDisplay}</td>
-                    <td>
+                    <td class="hide-on-compact">
                         ${item.shippingMethod || '-'}
                         ${shippingAlert ? `<div class="shipping-alert">${shippingAlert}</div>` : ''}
                     </td>
-                    <td>${item.uniqueId}</td>
+                    <td class="hide-on-compact">${item.uniqueId}</td>
                     <td>
                         <button class="edit-btn" onclick="editItem(${globalIndex})">Edit</button>
                         <button class="qr-btn" onclick="showQR('${item.uniqueId}')">QR</button>
@@ -1332,7 +1538,7 @@
         function applyBulkStatus() {
             const newStatus = document.getElementById('bulkStatus').value;
             if (!newStatus) {
-                alert('Please select a status');
+                showToast('Please select a status', 'warning');
                 return;
             }
 
@@ -1345,6 +1551,7 @@
             clearSelection();
             renderInventory();
             updateDashboard();
+            showToast(`Status updated for ${selectedItems.size} item(s)`, 'success');
         }
 
         // Status class helper
@@ -1565,14 +1772,14 @@
                 saveToHistory();
                 renderInventory();
                 updateDashboard();
-                alert('Import successful!');
+                showToast('Import successful!', 'success');
             };
             reader.readAsText(file);
         }
 
         // Clear all data
         function clearAllData() {
-            if (confirm('Are you sure you want to clear all data? This cannot be undone!')) {
+            showConfirm('Are you sure you want to clear all data? This cannot be undone!', () => {
                 inventory = [];
                 localStorage.removeItem('cardInventory');
                 history = [];
@@ -1581,8 +1788,8 @@
                 renderInventory();
                 updateDashboard();
                 updateUndoRedoButtons();
-                alert('All data has been cleared.');
-            }
+                showToast('All data has been cleared.', 'info');
+            }, 'Clear All Data');
         }
 
         // Initialize on load
@@ -1595,6 +1802,7 @@
             renderInventory();
             updateUndoRedoButtons();
             checkStorageSize();
+            applyCompactView();
         });
     </script>
 </body>
