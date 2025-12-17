@@ -1209,6 +1209,11 @@
                     </select>
                     <button class="action-btn" style="background: #667eea; color: white;" onclick="applyBulkStatus()">Apply</button>
                     <button class="action-btn" style="background: #a0aec0; color: white;" onclick="clearSelection()">Clear Selection</button>
+                    <div style="border-left: 2px solid #e2e8f0; margin: 0 10px; height: 30px; display: inline-block;"></div>
+                    <span style="font-weight: 600; margin-right: 8px;">Dead Stock Auto-Markdown (>90d):</span>
+                    <button class="action-btn" style="background: #f6ad55; color: white; padding: 6px 12px;" onclick="bulkMarkdownDeadStock(10)" title="Mark down all items older than 90 days by 10%">-10%</button>
+                    <button class="action-btn" style="background: #ed8936; color: white; padding: 6px 12px;" onclick="bulkMarkdownDeadStock(20)" title="Mark down all items older than 90 days by 20%">-20%</button>
+                    <button class="action-btn" style="background: #dd6b20; color: white; padding: 6px 12px;" onclick="bulkMarkdownDeadStock(30)" title="Mark down all items older than 90 days by 30%">-30%</button>
                 </div>
                 <div style="overflow-x: auto;">
                     <table id="inventoryTable">
@@ -1288,6 +1293,60 @@
                 <div class="metric-card">
                     <div class="metric-label">Dead Stock (>90d)</div>
                     <div class="metric-value" id="deadStock" style="color: #e53e3e;">0</div>
+                </div>
+            </div>
+            <h2 style="margin: 30px 0 20px 0; color: var(--text-primary);">💰 Inventory Valuation</h2>
+            <div class="dashboard">
+                <div class="metric-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <div class="metric-label" style="color: rgba(255,255,255,0.9);">Total Listed Value</div>
+                    <div class="metric-value" id="totalListedValue" style="font-size: 2.2em; color: white;">$0.00</div>
+                    <p style="font-size: 12px; margin: 5px 0 0 0; opacity: 0.9;">Unsold inventory list prices</p>
+                </div>
+                <div class="metric-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+                    <div class="metric-label" style="color: rgba(255,255,255,0.9);">Total Cost Basis</div>
+                    <div class="metric-value" id="totalCostBasis" style="font-size: 2.2em; color: white;">$0.00</div>
+                    <p style="font-size: 12px; margin: 5px 0 0 0; opacity: 0.9;">What you paid for unsold inventory</p>
+                </div>
+                <div class="metric-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;">
+                    <div class="metric-label" style="color: rgba(255,255,255,0.9);">Potential Profit</div>
+                    <div class="metric-value" id="potentialProfit" style="font-size: 2.2em; color: white;">$0.00</div>
+                    <p style="font-size: 12px; margin: 5px 0 0 0; opacity: 0.9;">If everything sells at list price</p>
+                </div>
+                <div class="metric-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white;">
+                    <div class="metric-label" style="color: rgba(255,255,255,0.9);">Dead Stock Value</div>
+                    <div class="metric-value" id="deadStockValue" style="font-size: 2.2em; color: white;">$0.00</div>
+                    <p style="font-size: 12px; margin: 5px 0 0 0; opacity: 0.9;">Listed value of items >90 days</p>
+                </div>
+            </div>
+            <h2 style="margin: 30px 0 20px 0; color: var(--text-primary);">📊 Tax & Accounting Reports</h2>
+            <div class="chart-container">
+                <div style="display: flex; gap: 15px; align-items: end; flex-wrap: wrap; margin-bottom: 20px;">
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">From Date:</label>
+                        <input type="date" id="reportDateFrom" style="padding: 8px; border: 2px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary);">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">To Date:</label>
+                        <input type="date" id="reportDateTo" style="padding: 8px; border: 2px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary);">
+                    </div>
+                    <div>
+                        <button class="action-btn" style="background: #667eea; color: white; padding: 10px 20px;" onclick="setReportQuickRange('thisMonth')">This Month</button>
+                        <button class="action-btn" style="background: #667eea; color: white; padding: 10px 20px;" onclick="setReportQuickRange('lastMonth')">Last Month</button>
+                        <button class="action-btn" style="background: #667eea; color: white; padding: 10px 20px;" onclick="setReportQuickRange('thisYear')">This Year</button>
+                    </div>
+                    <div>
+                        <button class="submit-btn" onclick="exportTaxReport()" style="padding: 10px 30px;">📥 Export Tax Report</button>
+                    </div>
+                </div>
+                <div id="reportSummary" style="background: var(--bg-tertiary); padding: 20px; border-radius: 8px; display: none;">
+                    <h3 style="margin-top: 0;">Report Preview</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div><strong>Items Sold:</strong> <span id="reportItemCount">0</span></div>
+                        <div><strong>Total Revenue:</strong> $<span id="reportRevenue">0.00</span></div>
+                        <div><strong>Total Cost:</strong> $<span id="reportCost">0.00</span></div>
+                        <div><strong>Total Fees:</strong> $<span id="reportFees">0.00</span></div>
+                        <div><strong>Net Profit:</strong> <span id="reportProfit" style="font-weight: 700; font-size: 1.2em;">$0.00</span></div>
+                    </div>
                 </div>
             </div>
             <div class="charts-grid">
@@ -1427,6 +1486,56 @@
                     <li><strong>⏰ Inventory Aging:</strong> See how long items have been in inventory with color-coded aging</li>
                     <li><strong>📝 eBay Quick Links:</strong> Click "eBay" button to create listing with pre-filled info</li>
                     <li><strong>📊 Business Metrics:</strong> Track revenue, actual profit, and dead stock (>90 days)</li>
+                    <li><strong>📊 Tax & Accounting Reports:</strong> Export detailed tax reports by date range with totals for sold items</li>
+                    <li><strong>💰 Inventory Valuation:</strong> Real-time metrics showing total value, cost basis, and potential profit of unsold inventory</li>
+                    <li><strong>💸 Auto-Repricing for Dead Stock:</strong> Smart price suggestions appear on aging items (>60 days) with one-click markdown buttons</li>
+                </ul>
+            </div>
+            <div class="instructions">
+                <h3>📊 Tax & Accounting Reports</h3>
+                <p><strong>Export clean tax reports for your accountant!</strong></p>
+                <ul>
+                    <li><strong>Dashboard Access:</strong> Find "Tax & Accounting Reports" section on Dashboard tab</li>
+                    <li><strong>Date Range Filters:</strong> Choose custom date range or quick presets (This Month, Last Month, This Year)</li>
+                    <li><strong>Live Preview:</strong> See summary totals before exporting (items sold, revenue, costs, fees, net profit)</li>
+                    <li><strong>Export CSV:</strong> Click "Export Tax Report" to download detailed report with all sold items</li>
+                    <li><strong>Report Includes:</strong> Sold date, description, sale price, cost basis, shipping data, eBay fees, and net profit per item</li>
+                    <li><strong>Tax Season Ready:</strong> Clean, organized data your accountant will love</li>
+                </ul>
+            </div>
+            <div class="instructions">
+                <h3>💰 Inventory Valuation</h3>
+                <p><strong>Know exactly what your inventory is worth!</strong></p>
+                <ul>
+                    <li><strong>Dashboard Widgets:</strong> Four key metrics displayed on Dashboard tab:
+                        <ul>
+                            <li><strong>Total Listed Value:</strong> Sum of all unsold item list prices</li>
+                            <li><strong>Total Cost Basis:</strong> What you paid for unsold inventory</li>
+                            <li><strong>Potential Profit:</strong> Profit if everything sells at list price</li>
+                            <li><strong>Dead Stock Value:</strong> Listed value of items older than 90 days</li>
+                        </ul>
+                    </li>
+                    <li><strong>Real-Time Updates:</strong> Metrics update automatically as you add, edit, or sell items</li>
+                    <li><strong>Business Intelligence:</strong> Know how much capital is tied up in inventory</li>
+                    <li><strong>Dead Stock Tracking:</strong> Identify how much value is trapped in aging inventory</li>
+                </ul>
+            </div>
+            <div class="instructions">
+                <h3>💸 Auto-Repricing for Dead Stock</h3>
+                <p><strong>Free up cash from slow-moving inventory with smart price suggestions!</strong></p>
+                <ul>
+                    <li><strong>Smart Algorithm:</strong> System suggests price reductions based on inventory age:
+                        <ul>
+                            <li><strong>60-89 days old:</strong> 10% markdown suggested</li>
+                            <li><strong>90-119 days old:</strong> 20% markdown suggested</li>
+                            <li><strong>120+ days old:</strong> 30% markdown suggested</li>
+                        </ul>
+                    </li>
+                    <li><strong>One-Click Markdown:</strong> Red "💸 -X%" button appears in inventory table for aging items - click to instantly apply suggested price</li>
+                    <li><strong>Bulk Actions:</strong> Use bulk markdown buttons above inventory table to mark down all items >90 days old at once (-10%, -20%, or -30%)</li>
+                    <li><strong>Confirmation Required:</strong> Bulk actions ask for confirmation before applying changes</li>
+                    <li><strong>Why It Works:</strong> Aging inventory = dead capital. Small price cut = faster sales = better cash flow!</li>
+                    <li><strong>Button Details:</strong> Hover over markdown buttons to see exact savings (e.g., "Reduce by 20% (save $4.00)")</li>
                 </ul>
             </div>
         </div>
@@ -1891,6 +2000,32 @@
             });
             document.getElementById('deadStock').textContent = deadStock.length;
 
+            // Inventory Valuation Metrics
+            const unsoldItems = inventory.filter(item => item.status !== '💰 Sold');
+            let totalListedValue = 0;
+            let totalCostBasis = 0;
+            let deadStockValue = 0;
+
+            unsoldItems.forEach(item => {
+                const listPrice = parseFloat(item.listPrice) || 0;
+                const costBasis = parseFloat(item.costBasis) || 0;
+                totalListedValue += listPrice;
+                totalCostBasis += costBasis;
+
+                // Calculate dead stock value
+                const daysOld = calculateDaysOld(item.timestamp);
+                if (daysOld > 90) {
+                    deadStockValue += listPrice;
+                }
+            });
+
+            const potentialProfit = totalListedValue - totalCostBasis;
+
+            document.getElementById('totalListedValue').textContent = '$' + totalListedValue.toFixed(2);
+            document.getElementById('totalCostBasis').textContent = '$' + totalCostBasis.toFixed(2);
+            document.getElementById('potentialProfit').textContent = '$' + potentialProfit.toFixed(2);
+            document.getElementById('deadStockValue').textContent = '$' + deadStockValue.toFixed(2);
+
             // Update charts
             updateSportChart();
             updateStatusChart();
@@ -2023,6 +2158,162 @@
             }).join('') + '</div>';
         }
 
+        // Tax Report Functions
+        function setReportQuickRange(range) {
+            const now = new Date();
+            const fromField = document.getElementById('reportDateFrom');
+            const toField = document.getElementById('reportDateTo');
+
+            if (range === 'thisMonth') {
+                fromField.value = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+                toField.value = now.toISOString().split('T')[0];
+            } else if (range === 'lastMonth') {
+                const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                fromField.value = lastMonth.toISOString().split('T')[0];
+                toField.value = new Date(now.getFullYear(), now.getMonth(), 0).toISOString().split('T')[0];
+            } else if (range === 'thisYear') {
+                fromField.value = new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0];
+                toField.value = now.toISOString().split('T')[0];
+            }
+
+            // Update preview
+            updateReportPreview();
+        }
+
+        function updateReportPreview() {
+            const fromDate = document.getElementById('reportDateFrom').value;
+            const toDate = document.getElementById('reportDateTo').value;
+
+            if (!fromDate || !toDate) return;
+
+            const soldItems = inventory.filter(item => {
+                if (item.status !== '💰 Sold' || !item.soldDate) return false;
+                return item.soldDate >= fromDate && item.soldDate <= toDate;
+            });
+
+            let totalRevenue = 0;
+            let totalCost = 0;
+            let totalFees = 0;
+            let totalProfit = 0;
+
+            soldItems.forEach(item => {
+                const soldPrice = parseFloat(item.soldPrice) || 0;
+                const costBasis = parseFloat(item.costBasis) || 0;
+                const feeRate = parseFloat(item.ebayFeeRate) || 13.25;
+                const ebayFee = soldPrice * (feeRate / 100);
+                const shippingCost = parseFloat(item.shippingCost) || 0;
+                const shippingRevenue = parseFloat(item.shippingRevenue) || 0;
+
+                totalRevenue += soldPrice + shippingRevenue;
+                totalCost += costBasis + shippingCost;
+                totalFees += ebayFee;
+                totalProfit += (soldPrice + shippingRevenue - costBasis - shippingCost - ebayFee);
+            });
+
+            document.getElementById('reportItemCount').textContent = soldItems.length;
+            document.getElementById('reportRevenue').textContent = totalRevenue.toFixed(2);
+            document.getElementById('reportCost').textContent = totalCost.toFixed(2);
+            document.getElementById('reportFees').textContent = totalFees.toFixed(2);
+            document.getElementById('reportProfit').textContent = '$' + totalProfit.toFixed(2);
+            document.getElementById('reportProfit').style.color = totalProfit >= 0 ? '#48bb78' : '#f56565';
+
+            document.getElementById('reportSummary').style.display = 'block';
+        }
+
+        function exportTaxReport() {
+            const fromDate = document.getElementById('reportDateFrom').value;
+            const toDate = document.getElementById('reportDateTo').value;
+
+            if (!fromDate || !toDate) {
+                showToast('Please select date range first', 'error');
+                return;
+            }
+
+            const soldItems = inventory.filter(item => {
+                if (item.status !== '💰 Sold' || !item.soldDate) return false;
+                return item.soldDate >= fromDate && item.soldDate <= toDate;
+            });
+
+            if (soldItems.length === 0) {
+                showToast('No sold items in this date range', 'info');
+                return;
+            }
+
+            // CSV Headers
+            const headers = [
+                'Sold Date', 'Description', 'Sport', 'Condition',
+                'Sale Price', 'Shipping Revenue', 'Total Revenue',
+                'Cost Basis', 'Shipping Cost', 'Total Cost',
+                'eBay Fee %', 'eBay Fees', 'Net Profit',
+                'eBay Item #', 'Unique ID', 'Submitted By'
+            ];
+
+            let csv = headers.join(',') + '\n';
+
+            soldItems.forEach(item => {
+                const soldPrice = parseFloat(item.soldPrice) || 0;
+                const costBasis = parseFloat(item.costBasis) || 0;
+                const shippingCost = parseFloat(item.shippingCost) || 0;
+                const shippingRevenue = parseFloat(item.shippingRevenue) || 0;
+                const feeRate = parseFloat(item.ebayFeeRate) || 13.25;
+                const ebayFee = soldPrice * (feeRate / 100);
+                const totalRevenue = soldPrice + shippingRevenue;
+                const totalCost = costBasis + shippingCost;
+                const netProfit = totalRevenue - totalCost - ebayFee;
+
+                const row = [
+                    item.soldDate || '',
+                    `"${(item.description || '').replace(/"/g, '""')}"`,
+                    item.sport || '',
+                    item.condition || '',
+                    soldPrice.toFixed(2),
+                    shippingRevenue.toFixed(2),
+                    totalRevenue.toFixed(2),
+                    costBasis.toFixed(2),
+                    shippingCost.toFixed(2),
+                    totalCost.toFixed(2),
+                    feeRate.toFixed(2),
+                    ebayFee.toFixed(2),
+                    netProfit.toFixed(2),
+                    item.ebayItemNumber || '',
+                    item.uniqueId || '',
+                    item.submittedBy || ''
+                ];
+
+                csv += row.join(',') + '\n';
+            });
+
+            // Add totals row
+            const totals = soldItems.reduce((acc, item) => {
+                const soldPrice = parseFloat(item.soldPrice) || 0;
+                const costBasis = parseFloat(item.costBasis) || 0;
+                const shippingCost = parseFloat(item.shippingCost) || 0;
+                const shippingRevenue = parseFloat(item.shippingRevenue) || 0;
+                const feeRate = parseFloat(item.ebayFeeRate) || 13.25;
+                const ebayFee = soldPrice * (feeRate / 100);
+
+                acc.revenue += soldPrice + shippingRevenue;
+                acc.cost += costBasis + shippingCost;
+                acc.fees += ebayFee;
+                acc.profit += (soldPrice + shippingRevenue - costBasis - shippingCost - ebayFee);
+                return acc;
+            }, { revenue: 0, cost: 0, fees: 0, profit: 0 });
+
+            csv += '\n';
+            csv += `TOTALS,${soldItems.length} items,,,,${totals.revenue.toFixed(2)},,,${totals.cost.toFixed(2)},,${totals.fees.toFixed(2)},${totals.profit.toFixed(2)}\n`;
+
+            // Download
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `tax_report_${fromDate}_to_${toDate}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            showToast(`Exported ${soldItems.length} sold items`, 'success');
+        }
+
         // Profit calculation
         function calculateProfit(item) {
             const listPrice = parseFloat(item.listPrice) || 0;
@@ -2081,6 +2372,59 @@
             if (daysOld < 30) return daysOld + 'd';
             if (daysOld < 60) return Math.floor(daysOld / 7) + 'w';
             return Math.floor(daysOld / 30) + 'm';
+        }
+
+        // Auto-Repricing: Calculate suggested markdown
+        function getSuggestedPrice(item, daysOld) {
+            const currentPrice = parseFloat(item.listPrice) || 0;
+            if (currentPrice === 0 || item.status === '💰 Sold') return null;
+
+            let markdownPercent = 0;
+            if (daysOld >= 120) markdownPercent = 30;  // 30% off after 120 days
+            else if (daysOld >= 90) markdownPercent = 20;   // 20% off after 90 days
+            else if (daysOld >= 60) markdownPercent = 10;   // 10% off after 60 days
+            else return null; // No markdown needed
+
+            const suggestedPrice = currentPrice * (1 - markdownPercent / 100);
+            return { suggestedPrice, markdownPercent, savings: currentPrice - suggestedPrice };
+        }
+
+        // Apply markdown to single item
+        function applyMarkdown(index, newPrice) {
+            inventory[index].listPrice = newPrice.toFixed(2);
+            localStorage.setItem('cardInventory', JSON.stringify(inventory));
+            saveToHistory();
+            renderInventory();
+            updateDashboard();
+            showToast(`Price updated to $${newPrice.toFixed(2)}`, 'success');
+        }
+
+        // Bulk markdown for all dead stock
+        function bulkMarkdownDeadStock(percent) {
+            showConfirm(
+                `Mark down all items >90 days old by ${percent}%?`,
+                () => {
+                    let count = 0;
+                    inventory.forEach(item => {
+                        if (item.status !== '💰 Sold') {
+                            const daysOld = calculateDaysOld(item.timestamp);
+                            if (daysOld > 90) {
+                                const currentPrice = parseFloat(item.listPrice) || 0;
+                                if (currentPrice > 0) {
+                                    item.listPrice = (currentPrice * (1 - percent / 100)).toFixed(2);
+                                    count++;
+                                }
+                            }
+                        }
+                    });
+                    localStorage.setItem('cardInventory', JSON.stringify(inventory));
+                    saveToHistory();
+                    renderInventory();
+                    updateDashboard();
+                    showToast(`${count} items marked down by ${percent}%`, 'success');
+                },
+                'Bulk Markdown'
+            );
         }
 
         // Smart Validation
@@ -2458,6 +2802,11 @@
                 const soldPriceDisplay = item.soldPrice && item.status === '💰 Sold' ?
                     `$${parseFloat(item.soldPrice).toFixed(2)}` : '-';
 
+                // Auto-repricing suggestion
+                const pricingSuggestion = getSuggestedPrice(item, daysOld);
+                const repricingButton = pricingSuggestion ?
+                    `<button class="action-btn" style="background: #f56565; color: white; padding: 4px 8px; font-size: 11px; margin-top: 4px;" onclick="applyMarkdown(${globalIndex}, ${pricingSuggestion.suggestedPrice.toFixed(2)})" title="Reduce by ${pricingSuggestion.markdownPercent}% (save $${pricingSuggestion.savings.toFixed(2)})">💸 -${pricingSuggestion.markdownPercent}%</button>` : '';
+
                 row.innerHTML = `
                     <td><input type="checkbox" class="item-checkbox" data-index="${globalIndex}" onchange="updateSelection()"></td>
                     <td class="hide-on-compact">${item.timestamp}</td>
@@ -2482,6 +2831,7 @@
                     <td>
                         <button class="edit-btn" onclick="editItem(${globalIndex})">Edit</button>
                         ${item.status !== '💰 Sold' ? `<button class="action-btn" style="background: #4299e1; color: white; padding: 4px 8px; font-size: 12px;" onclick="createEbayListing(${globalIndex})">📝 eBay</button>` : ''}
+                        ${repricingButton}
                         <button class="qr-btn" onclick="showQR('${item.uniqueId}')">QR</button>
                         ${item.photos && item.photos.length > 0 ? `<button class="photo-btn" onclick="viewPhotos(${globalIndex})">📷 ${item.photos.length}</button>` : ''}
                     </td>
@@ -2896,6 +3246,12 @@
             initializeValidation();
             updateActiveBoxBanners();
             renderBoxList();
+
+            // Tax report date listeners
+            const dateFrom = document.getElementById('reportDateFrom');
+            const dateTo = document.getElementById('reportDateTo');
+            if (dateFrom) dateFrom.addEventListener('change', updateReportPreview);
+            if (dateTo) dateTo.addEventListener('change', updateReportPreview);
         });
     </script>
 </body>
