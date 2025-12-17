@@ -263,6 +263,28 @@
             background: #e6ffe6;
             color: #009900;
         }
+        .status-sold {
+            background: #fff4e6;
+            color: #d97706;
+            font-weight: 700;
+        }
+        .aging-fresh {
+            color: #38a169;
+        }
+        .aging-moderate {
+            color: #ed8936;
+        }
+        .aging-old {
+            color: #e53e3e;
+            font-weight: 600;
+        }
+        .aging-dead {
+            color: #c53030;
+            font-weight: 700;
+            background: #fed7d7;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
         .dashboard {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -1026,6 +1048,7 @@
                             <option value="📸 Photos Taken">📸 Photos Taken</option>
                             <option value="📝 Need to Post">📝 Need to Post</option>
                             <option value="✅ Listed on eBay">✅ Listed on eBay</option>
+                            <option value="💰 Sold">💰 Sold</option>
                         </select>
                         <p class="help-text">What stage are these cards at?</p>
                     </div>
@@ -1117,6 +1140,7 @@
                             <option value="📸 Photos Taken">📸 Photos Taken</option>
                             <option value="📝 Need to Post">📝 Need to Post</option>
                             <option value="✅ Listed on eBay">✅ Listed on eBay</option>
+                            <option value="💰 Sold">💰 Sold</option>
                         </select>
                     </div>
                     <div class="filter-group">
@@ -1181,6 +1205,7 @@
                         <option value="📸 Photos Taken">📸 Photos Taken</option>
                         <option value="📝 Need to Post">📝 Need to Post</option>
                         <option value="✅ Listed on eBay">✅ Listed on eBay</option>
+                        <option value="💰 Sold">💰 Sold</option>
                     </select>
                     <button class="action-btn" style="background: #667eea; color: white;" onclick="applyBulkStatus()">Apply</button>
                     <button class="action-btn" style="background: #a0aec0; color: white;" onclick="clearSelection()">Clear Selection</button>
@@ -1191,6 +1216,7 @@
                             <tr>
                                 <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
                                 <th class="hide-on-compact" onclick="sortTable('timestamp')">Timestamp <span class="sort-indicator"></span></th>
+                                <th onclick="sortTable('daysOld')">Age <span class="sort-indicator"></span></th>
                                 <th onclick="sortTable('sport')">Sport <span class="sort-indicator"></span></th>
                                 <th class="hide-on-compact" onclick="sortTable('condition')">Condition <span class="sort-indicator"></span></th>
                                 <th onclick="sortTable('quantityType')">Type <span class="sort-indicator"></span></th>
@@ -1201,6 +1227,7 @@
                                 <th class="hide-on-compact">Submitted By</th>
                                 <th class="hide-on-compact">eBay Item #</th>
                                 <th onclick="sortTable('listPrice')">List Price <span class="sort-indicator"></span></th>
+                                <th onclick="sortTable('soldPrice')">Sold $ <span class="sort-indicator"></span></th>
                                 <th onclick="sortTable('calculatedProfit')">Profit <span class="sort-indicator"></span></th>
                                 <th class="hide-on-compact">Shipping</th>
                                 <th class="hide-on-compact" onclick="sortTable('uniqueId')">Unique ID <span class="sort-indicator"></span></th>
@@ -1247,12 +1274,20 @@
                     <div class="metric-value" id="listedOnEbay">0</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-label">Total Profit</div>
-                    <div class="metric-value" id="totalProfit" style="font-size: 2em;">$0.00</div>
+                    <div class="metric-label">💰 Sold Items</div>
+                    <div class="metric-value" id="soldItems">0</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-label">Avg Profit/Item</div>
-                    <div class="metric-value" id="avgProfit" style="font-size: 2em;">$0.00</div>
+                    <div class="metric-label">Total Revenue</div>
+                    <div class="metric-value" id="totalRevenue" style="font-size: 2em;">$0.00</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Actual Profit</div>
+                    <div class="metric-value" id="actualProfit" style="font-size: 2em;">$0.00</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Dead Stock (>90d)</div>
+                    <div class="metric-value" id="deadStock" style="color: #e53e3e;">0</div>
                 </div>
             </div>
             <div class="charts-grid">
@@ -1264,6 +1299,10 @@
                     <div class="chart-title">📈 Items by Status</div>
                     <div class="bar-chart" id="statusChart"></div>
                 </div>
+            </div>
+            <div class="chart-container">
+                <div class="chart-title">📦 Box ROI Tracker</div>
+                <div id="boxROIChart"></div>
             </div>
             <div class="inventory-table">
                 <h3 style="padding: 20px; background: var(--bg-tertiary); margin: 0;">Recent Activity (Last 10 Entries)</h3>
@@ -1367,6 +1406,11 @@
                     <li><strong>Smart Validation:</strong> Real-time warnings for shipping rules and high costs</li>
                     <li><strong>Visual Charts:</strong> Dashboard includes bar charts for sports and status distribution</li>
                     <li><strong>Box Break Calculator:</strong> Auto-allocate sealed box costs to individual cards</li>
+                    <li><strong>💰 Sales Tracking:</strong> Mark items as "Sold" with actual sold price and date</li>
+                    <li><strong>📦 Box ROI Tracker:</strong> Dashboard shows profitability of each box break</li>
+                    <li><strong>⏰ Inventory Aging:</strong> See how long items have been in inventory with color-coded aging</li>
+                    <li><strong>📝 eBay Quick Links:</strong> Click "eBay" button to create listing with pre-filled info</li>
+                    <li><strong>📊 Business Metrics:</strong> Track revenue, actual profit, and dead stock (>90 days)</li>
                 </ul>
             </div>
         </div>
@@ -1806,24 +1850,35 @@
             document.getElementById('needToPost').textContent = inventory.filter(item => item.status === '📝 Need to Post').length;
             document.getElementById('listedOnEbay').textContent = inventory.filter(item => item.status === '✅ Listed on eBay').length;
 
-            // Calculate profit metrics
-            let totalProfit = 0;
-            let profitableItems = 0;
-            inventory.forEach(item => {
-                const profit = calculateProfit(item);
-                if (profit !== null) {
-                    totalProfit += profit;
-                    profitableItems++;
+            // Calculate sold items and revenue
+            const soldItems = inventory.filter(item => item.status === '💰 Sold');
+            document.getElementById('soldItems').textContent = soldItems.length;
+
+            let totalRevenue = 0;
+            let totalActualProfit = 0;
+            soldItems.forEach(item => {
+                totalRevenue += parseFloat(item.soldPrice) || 0;
+                const actualProfit = calculateActualProfit(item);
+                if (actualProfit !== null) {
+                    totalActualProfit += actualProfit;
                 }
             });
 
-            document.getElementById('totalProfit').textContent = '$' + totalProfit.toFixed(2);
-            document.getElementById('avgProfit').textContent = profitableItems > 0 ?
-                '$' + (totalProfit / profitableItems).toFixed(2) : '$0.00';
+            document.getElementById('totalRevenue').textContent = '$' + totalRevenue.toFixed(2);
+            document.getElementById('actualProfit').textContent = '$' + totalActualProfit.toFixed(2);
+
+            // Calculate dead stock (items >90 days old and not sold)
+            const deadStock = inventory.filter(item => {
+                if (item.status === '💰 Sold') return false;
+                const daysOld = calculateDaysOld(item.timestamp);
+                return daysOld > 90;
+            });
+            document.getElementById('deadStock').textContent = deadStock.length;
 
             // Update charts
             updateSportChart();
             updateStatusChart();
+            updateBoxROIChart();
 
             const recentBody = document.getElementById('recentActivity');
             recentBody.innerHTML = '';
@@ -1883,7 +1938,8 @@
             const statusCounts = {
                 '📸 Photos Taken': 0,
                 '📝 Need to Post': 0,
-                '✅ Listed on eBay': 0
+                '✅ Listed on eBay': 0,
+                '💰 Sold': 0
             };
 
             inventory.forEach(item => {
@@ -1900,6 +1956,7 @@
                 let statusClass = 'status-photos';
                 if (status.includes('📝')) statusClass = 'status-needpost';
                 if (status.includes('✅')) statusClass = 'status-listed';
+                if (status.includes('💰')) statusClass = 'bar-fill sport-football'; // Green for sold
 
                 return `
                     <div class="bar-row">
@@ -1914,6 +1971,42 @@
             }).join('');
         }
 
+        // Box ROI Chart
+        function updateBoxROIChart() {
+            const chartContainer = document.getElementById('boxROIChart');
+
+            if (boxes.length === 0) {
+                chartContainer.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 20px;">No boxes to track. Create a box in the Box Break tab!</p>';
+                return;
+            }
+
+            const boxStats = boxes.map(box => {
+                const cardsFromBox = inventory.filter(item => item.boxId === box.id);
+                const listedValue = cardsFromBox.reduce((sum, item) => sum + (parseFloat(item.listPrice) || 0), 0);
+                const soldCards = cardsFromBox.filter(item => item.status === '💰 Sold');
+                const soldValue = soldCards.reduce((sum, item) => sum + (parseFloat(item.soldPrice) || 0), 0);
+                const recovery = box.cost > 0 ? (listedValue / box.cost) * 100 : 0;
+                const actualROI = box.cost > 0 ? ((soldValue - box.cost) / box.cost) * 100 : 0;
+
+                return { box, listedValue, soldValue, recovery, actualROI, cardCount: cardsFromBox.length };
+            }).sort((a, b) => b.soldValue - a.soldValue);
+
+            chartContainer.innerHTML = '<div class="bar-chart">' + boxStats.map(stats => {
+                const color = stats.actualROI > 0 ? '#48bb78' : stats.actualROI < -20 ? '#f56565' : '#ed8936';
+                return `
+                    <div class="bar-row">
+                        <div class="bar-label" style="min-width: 150px;">${stats.box.name.substring(0, 20)}</div>
+                        <div style="flex: 1; font-size: 13px; color: var(--text-secondary);">
+                            <strong>Listed:</strong> $${stats.listedValue.toFixed(0)} (${stats.recovery.toFixed(0)}% recovery) |
+                            <strong>Sold:</strong> $${stats.soldValue.toFixed(0)} |
+                            <strong>ROI:</strong> <span style="color: ${color}; font-weight: 600;">${stats.actualROI > 0 ? '+' : ''}${stats.actualROI.toFixed(0)}%</span> |
+                            <strong>Cards:</strong> ${stats.cardCount}/${stats.box.cardsAdded}
+                        </div>
+                    </div>
+                `;
+            }).join('') + '</div>';
+        }
+
         // Profit calculation
         function calculateProfit(item) {
             const listPrice = parseFloat(item.listPrice) || 0;
@@ -1925,6 +2018,49 @@
 
             const ebayFee = listPrice * (feeRate / 100);
             return listPrice - costBasis - ebayFee - shippingCost;
+        }
+
+        // Actual profit calculation (for sold items)
+        function calculateActualProfit(item) {
+            if (!item.soldPrice || item.status !== '💰 Sold') return null;
+
+            const soldPrice = parseFloat(item.soldPrice) || 0;
+            const costBasis = parseFloat(item.costBasis) || 0;
+            const shippingCost = parseFloat(item.shippingCost) || 0;
+            const feeRate = parseFloat(item.ebayFeeRate) || 13.25;
+
+            const ebayFee = soldPrice * (feeRate / 100);
+            return soldPrice - costBasis - ebayFee - shippingCost;
+        }
+
+        // Calculate days since item was added
+        function calculateDaysOld(timestamp) {
+            try {
+                const itemDate = new Date(timestamp);
+                const now = new Date();
+                const diffTime = Math.abs(now - itemDate);
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                return diffDays;
+            } catch (e) {
+                return 0;
+            }
+        }
+
+        // Get aging class for styling
+        function getAgingClass(daysOld) {
+            if (daysOld < 30) return 'aging-fresh';
+            if (daysOld < 60) return 'aging-moderate';
+            if (daysOld < 90) return 'aging-old';
+            return 'aging-dead';
+        }
+
+        // Format days old display
+        function formatDaysOld(daysOld) {
+            if (daysOld === 0) return 'Today';
+            if (daysOld === 1) return '1d';
+            if (daysOld < 30) return daysOld + 'd';
+            if (daysOld < 60) return Math.floor(daysOld / 7) + 'w';
+            return Math.floor(daysOld / 30) + 'm';
         }
 
         // Smart Validation
@@ -2156,6 +2292,7 @@
                         <option value="📸 Photos Taken" ${currentValue === '📸 Photos Taken' ? 'selected' : ''}>📸 Photos Taken</option>
                         <option value="📝 Need to Post" ${currentValue === '📝 Need to Post' ? 'selected' : ''}>📝 Need to Post</option>
                         <option value="✅ Listed on eBay" ${currentValue === '✅ Listed on eBay' ? 'selected' : ''}>✅ Listed on eBay</option>
+                        <option value="💰 Sold" ${currentValue === '💰 Sold' ? 'selected' : ''}>💰 Sold</option>
                     `;
                     const originalHTML = cell.innerHTML;
                     cell.innerHTML = '';
@@ -2239,12 +2376,15 @@
                 let bVal = b[sortColumn];
 
                 // Handle special cases
-                if (sortColumn === 'quantity' || sortColumn === 'listPrice' || sortColumn === 'calculatedProfit') {
+                if (sortColumn === 'daysOld') {
+                    aVal = calculateDaysOld(a.timestamp);
+                    bVal = calculateDaysOld(b.timestamp);
+                } else if (sortColumn === 'quantity' || sortColumn === 'listPrice' || sortColumn === 'soldPrice' || sortColumn === 'calculatedProfit') {
                     aVal = parseFloat(aVal) || 0;
                     bVal = parseFloat(bVal) || 0;
                     if (sortColumn === 'calculatedProfit') {
-                        aVal = calculateProfit(a) || 0;
-                        bVal = calculateProfit(b) || 0;
+                        aVal = a.status === '💰 Sold' ? (calculateActualProfit(a) || 0) : (calculateProfit(a) || 0);
+                        bVal = b.status === '💰 Sold' ? (calculateActualProfit(b) || 0) : (calculateProfit(b) || 0);
                     }
                 } else {
                     aVal = String(aVal || '').toLowerCase();
@@ -2284,13 +2424,24 @@
                     shippingAlert = '⚠️ MUST USE GROUND';
                 }
 
-                const profit = calculateProfit(item);
+                // Calculate aging
+                const daysOld = calculateDaysOld(item.timestamp);
+                const agingClass = getAgingClass(daysOld);
+                const agingDisplay = `<span class="${agingClass}">${formatDaysOld(daysOld)}</span>`;
+
+                // Calculate profit
+                const profit = item.status === '💰 Sold' ? calculateActualProfit(item) : calculateProfit(item);
                 const profitDisplay = profit !== null ?
                     `<span class="${profit >= 0 ? 'profit-positive' : 'profit-negative'}">$${profit.toFixed(2)}</span>` : '-';
+
+                // Sold price display
+                const soldPriceDisplay = item.soldPrice && item.status === '💰 Sold' ?
+                    `$${parseFloat(item.soldPrice).toFixed(2)}` : '-';
 
                 row.innerHTML = `
                     <td><input type="checkbox" class="item-checkbox" data-index="${globalIndex}" onchange="updateSelection()"></td>
                     <td class="hide-on-compact">${item.timestamp}</td>
+                    <td>${agingDisplay}</td>
                     <td>${item.sport}</td>
                     <td class="hide-on-compact">${item.condition}</td>
                     <td>${item.quantityType}</td>
@@ -2301,6 +2452,7 @@
                     <td class="hide-on-compact">${item.submittedBy}</td>
                     <td class="hide-on-compact" data-field="ebayItemNumber" data-index="${globalIndex}">${item.ebayItemNumber || '-'}</td>
                     <td data-field="listPrice" data-index="${globalIndex}">${item.listPrice ? '$' + item.listPrice : '-'}</td>
+                    <td data-field="soldPrice" data-index="${globalIndex}">${soldPriceDisplay}</td>
                     <td>${profitDisplay}</td>
                     <td class="hide-on-compact">
                         ${item.shippingMethod || '-'}
@@ -2309,6 +2461,7 @@
                     <td class="hide-on-compact">${item.uniqueId}</td>
                     <td>
                         <button class="edit-btn" onclick="editItem(${globalIndex})">Edit</button>
+                        ${item.status !== '💰 Sold' ? `<button class="action-btn" style="background: #4299e1; color: white; padding: 4px 8px; font-size: 12px;" onclick="createEbayListing(${globalIndex})">📝 eBay</button>` : ''}
                         <button class="qr-btn" onclick="showQR('${item.uniqueId}')">QR</button>
                         ${item.photos && item.photos.length > 0 ? `<button class="photo-btn" onclick="viewPhotos(${globalIndex})">📷 ${item.photos.length}</button>` : ''}
                     </td>
@@ -2323,10 +2476,12 @@
                 const statusCell = row.querySelector('[data-field="status"]');
                 const ebayCell = row.querySelector('[data-field="ebayItemNumber"]');
                 const priceCell = row.querySelector('[data-field="listPrice"]');
+                const soldPriceCell = row.querySelector('[data-field="soldPrice"]');
 
                 if (statusCell) makeInlineEditable(statusCell, globalIndex, 'status', 'status');
                 if (ebayCell) makeInlineEditable(ebayCell, globalIndex, 'ebayItemNumber', 'text');
                 if (priceCell) makeInlineEditable(priceCell, globalIndex, 'listPrice', 'price');
+                if (soldPriceCell && item.status === '💰 Sold') makeInlineEditable(soldPriceCell, globalIndex, 'soldPrice', 'price');
             });
 
             // Update sort indicators
@@ -2411,7 +2566,26 @@
             if (status.includes('📸')) return 'status-photos';
             if (status.includes('📝')) return 'status-needpost';
             if (status.includes('✅')) return 'status-listed';
+            if (status.includes('💰')) return 'status-sold';
             return '';
+        }
+
+        // eBay Quick Link - Generate listing URL
+        function createEbayListing(index) {
+            const item = inventory[index];
+
+            // Build eBay title
+            const title = `${item.sport} ${item.condition} ${item.description}`.substring(0, 80);
+
+            // Build eBay URL with pre-filled params
+            const ebayURL = new URL('https://www.ebay.com/sl/sell');
+            ebayURL.searchParams.append('srt', title);
+            if (item.listPrice) ebayURL.searchParams.append('pric', item.listPrice);
+
+            // Open in new tab
+            window.open(ebayURL.toString(), '_blank');
+
+            showToast('Opening eBay listing page...', 'info', 2000);
         }
 
         // Edit item
@@ -2426,6 +2600,15 @@
                 <div class="form-group">
                     <label>List Price ($):</label>
                     <input type="number" step="0.01" id="edit-price" value="${item.listPrice || ''}">
+                </div>
+                <div class="form-group">
+                    <label>Sold Price ($):</label>
+                    <input type="number" step="0.01" id="edit-sold-price" value="${item.soldPrice || ''}">
+                    <p class="help-text">Enter sold price when status is "Sold"</p>
+                </div>
+                <div class="form-group">
+                    <label>Sold Date:</label>
+                    <input type="date" id="edit-sold-date" value="${item.soldDate || ''}">
                 </div>
                 <div class="form-group">
                     <label>Cost Basis ($):</label>
@@ -2455,6 +2638,7 @@
                         <option value="📸 Photos Taken" ${item.status === '📸 Photos Taken' ? 'selected' : ''}>📸 Photos Taken</option>
                         <option value="📝 Need to Post" ${item.status === '📝 Need to Post' ? 'selected' : ''}>📝 Need to Post</option>
                         <option value="✅ Listed on eBay" ${item.status === '✅ Listed on eBay' ? 'selected' : ''}>✅ Listed on eBay</option>
+                        <option value="💰 Sold" ${item.status === '💰 Sold' ? 'selected' : ''}>💰 Sold</option>
                     </select>
                 </div>
                 <button onclick="saveEdit(${index})" class="submit-btn">Save Changes</button>
@@ -2465,16 +2649,25 @@
         function saveEdit(index) {
             inventory[index].ebayItemNumber = document.getElementById('edit-ebay').value;
             inventory[index].listPrice = document.getElementById('edit-price').value;
+            inventory[index].soldPrice = document.getElementById('edit-sold-price').value;
+            inventory[index].soldDate = document.getElementById('edit-sold-date').value;
             inventory[index].costBasis = document.getElementById('edit-cost').value;
             inventory[index].ebayFeeRate = document.getElementById('edit-fee').value;
             inventory[index].shippingCost = document.getElementById('edit-shipping-cost').value;
             inventory[index].shippingMethod = document.getElementById('edit-shipping').value;
             inventory[index].status = document.getElementById('edit-status').value;
+
+            // Auto-fill sold date if status changed to Sold and no date set
+            if (inventory[index].status === '💰 Sold' && !inventory[index].soldDate) {
+                inventory[index].soldDate = new Date().toISOString().split('T')[0];
+            }
+
             localStorage.setItem('cardInventory', JSON.stringify(inventory));
             saveToHistory();
             renderInventory();
             updateDashboard();
             closeModal();
+            showToast('Item updated successfully', 'success');
         }
 
         // QR Code generation (minimal SVG-based)
