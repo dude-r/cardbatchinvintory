@@ -826,6 +826,77 @@
             margin-bottom: 30px;
         }
 
+        .box-calculator {
+            background: var(--bg-secondary);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        .active-box-banner {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+        }
+
+        .box-list {
+            display: grid;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .box-item {
+            background: var(--bg-tertiary);
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .box-item.active {
+            border-color: #48bb78;
+            background: rgba(72, 187, 120, 0.1);
+        }
+
+        .box-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .box-item-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .box-item-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 10px 0;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .box-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #48bb78;
+            color: white;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 10px;
@@ -887,11 +958,19 @@
         <div class="tabs">
             <button class="tab active" onclick="showTab('intake', event)">📝 Card Intake</button>
             <button class="tab" onclick="showTab('inventory', event)">📋 Inventory List</button>
+            <button class="tab" onclick="showTab('boxbreak', event)">📦 Box Break</button>
             <button class="tab" onclick="showTab('dashboard', event)">📊 Dashboard</button>
             <button class="tab" onclick="showTab('instructions', event)">📖 Instructions</button>
         </div>
         <div id="intake" class="content active">
             <div class="form-container">
+                <div id="intakeActiveBoxBanner" style="display: none;" class="active-box-banner">
+                    <div>
+                        🎯 <strong>Active Box:</strong> <span id="intakeActiveBoxName"></span>
+                        <span style="margin-left: 15px;">Auto-calculating cost basis...</span>
+                    </div>
+                    <button type="button" class="action-btn" style="background: white; color: #38a169; padding: 6px 12px; font-size: 13px;" onclick="showTab('boxbreak')">View Box</button>
+                </div>
                 <div id="validationMessages"></div>
                 <form id="intakeForm">
                     <div class="form-group">
@@ -967,7 +1046,7 @@
                     <div class="form-group">
                         <label for="costBasis">Cost Basis ($)</label>
                         <input type="number" id="costBasis" step="0.01" min="0" placeholder="0.00">
-                        <p class="help-text">What did you pay for these cards?</p>
+                        <p class="help-text" id="costBasisHelp">Auto-calculated from active box, or enter manually</p>
                     </div>
                     <div class="form-group">
                         <label for="photos">Attach Photos (optional, max 2MB total)</label>
@@ -979,6 +1058,53 @@
                     </div>
                     <button type="submit" class="submit-btn">Submit Card Batch</button>
                 </form>
+            </div>
+        </div>
+        <div id="boxbreak" class="content">
+            <div id="activeBoxBanner" style="display: none;" class="active-box-banner">
+                <div>
+                    <strong>Active Box:</strong> <span id="activeBoxName"></span>
+                    <span style="margin-left: 15px;">Cost: $<span id="activeBoxCost"></span></span>
+                    <span style="margin-left: 15px;">Method: <span id="activeBoxMethod"></span></span>
+                </div>
+                <button class="action-btn" style="background: white; color: #38a169; padding: 6px 12px;" onclick="deactivateBox()">Deactivate</button>
+            </div>
+            <div class="box-calculator">
+                <h2>📦 Box Break Calculator</h2>
+                <p style="color: var(--text-secondary); margin: 10px 0 20px 0;">Track sealed product breaks and automatically allocate cost basis to cards.</p>
+
+                <form id="boxForm" onsubmit="createBox(event)">
+                    <div class="form-group">
+                        <label for="boxName">Box/Product Name <span class="required">*</span></label>
+                        <input type="text" id="boxName" required placeholder="e.g., 2023 Topps Series 1 Hobby Box">
+                        <p class="help-text">Descriptive name for this sealed product</p>
+                    </div>
+                    <div class="form-group">
+                        <label for="boxCost">Total Box Cost ($) <span class="required">*</span></label>
+                        <input type="number" id="boxCost" step="0.01" min="0" required placeholder="120.00">
+                        <p class="help-text">What you paid for this box/case/pack</p>
+                    </div>
+                    <div class="form-group">
+                        <label for="expectedCards">Expected Cards (optional)</label>
+                        <input type="number" id="expectedCards" min="1" placeholder="36">
+                        <p class="help-text">How many cards do you expect? Leave blank to calculate dynamically</p>
+                    </div>
+                    <div class="form-group">
+                        <label for="allocationMethod">Cost Allocation Method <span class="required">*</span></label>
+                        <select id="allocationMethod" required>
+                            <option value="equal">Equal Distribution - Divide cost equally across all cards</option>
+                            <option value="weighted">Value-Weighted - Allocate based on market value (manual)</option>
+                            <option value="zero-commons">Zero-Cost Commons - Assign all cost to hits only</option>
+                        </select>
+                        <p class="help-text">How should cost be distributed? Equal is simplest and most common</p>
+                    </div>
+                    <button type="submit" class="submit-btn">Create Box & Activate</button>
+                </form>
+            </div>
+
+            <div class="box-calculator">
+                <h3>Your Box Breaks</h3>
+                <div id="boxList" class="box-list"></div>
             </div>
         </div>
         <div id="inventory" class="content">
@@ -1207,6 +1333,22 @@
                 </ul>
             </div>
             <div class="instructions">
+                <h3>📦 Box Break Calculator</h3>
+                <ul>
+                    <li><strong>Create Box:</strong> Go to Box Break tab and enter box name, cost, and expected cards</li>
+                    <li><strong>Allocation Methods:</strong>
+                        <ul>
+                            <li><strong>Equal Distribution:</strong> Divides cost equally (e.g., $120 box ÷ 36 cards = $3.33/card)</li>
+                            <li><strong>Value-Weighted:</strong> Allocate based on market value (manual entry)</li>
+                            <li><strong>Zero-Cost Commons:</strong> Assigns $0 to commons, full cost to hits</li>
+                        </ul>
+                    </li>
+                    <li><strong>Active Box:</strong> Only one box can be active at a time. Cost basis auto-fills when adding cards</li>
+                    <li><strong>Auto-Complete:</strong> Box deactivates automatically when expected cards reached</li>
+                    <li><strong>Tracking:</strong> Each card remembers which box it came from</li>
+                </ul>
+            </div>
+            <div class="instructions">
                 <h3>🆕 New Features</h3>
                 <ul>
                     <li><strong>Dark Mode:</strong> Toggle theme with button in header</li>
@@ -1224,6 +1366,7 @@
                     <li><strong>Inline Quick Edit:</strong> Double-click status, price, or eBay# to edit without modal</li>
                     <li><strong>Smart Validation:</strong> Real-time warnings for shipping rules and high costs</li>
                     <li><strong>Visual Charts:</strong> Dashboard includes bar charts for sports and status distribution</li>
+                    <li><strong>Box Break Calculator:</strong> Auto-allocate sealed box costs to individual cards</li>
                 </ul>
             </div>
         </div>
@@ -1243,6 +1386,8 @@
         let sortColumn = '';
         let sortDirection = 'asc';
         let smartDefaults = JSON.parse(localStorage.getItem('smartDefaults')) || {};
+        let boxes = JSON.parse(localStorage.getItem('cardBoxes')) || [];
+        let activeBoxId = localStorage.getItem('activeBoxId') || null;
 
         // Initialize theme
         const savedTheme = localStorage.getItem('theme') || 'light';
@@ -1282,6 +1427,199 @@
             localStorage.removeItem('smartDefaults');
             document.getElementById('intakeForm').reset();
             showToast('Smart defaults cleared', 'info');
+        }
+
+        // Box Break Management
+        function createBox(event) {
+            event.preventDefault();
+
+            const box = {
+                id: Date.now().toString(),
+                name: document.getElementById('boxName').value,
+                cost: parseFloat(document.getElementById('boxCost').value),
+                expectedCards: parseInt(document.getElementById('expectedCards').value) || null,
+                method: document.getElementById('allocationMethod').value,
+                cardsAdded: 0,
+                createdAt: new Date().toLocaleString(),
+                active: false
+            };
+
+            boxes.push(box);
+            localStorage.setItem('cardBoxes', JSON.stringify(boxes));
+
+            // Auto-activate the new box
+            activateBox(box.id);
+
+            // Clear form
+            document.getElementById('boxForm').reset();
+
+            showToast('Box created and activated!', 'success');
+            renderBoxList();
+        }
+
+        function activateBox(boxId) {
+            // Deactivate all boxes first
+            boxes.forEach(b => b.active = false);
+
+            // Activate the selected box
+            const box = boxes.find(b => b.id === boxId);
+            if (box) {
+                box.active = true;
+                activeBoxId = boxId;
+                localStorage.setItem('activeBoxId', boxId);
+                localStorage.setItem('cardBoxes', JSON.stringify(boxes));
+                updateActiveBoxBanners();
+                showToast(`"${box.name}" is now active`, 'success');
+                renderBoxList();
+            }
+        }
+
+        function deactivateBox() {
+            boxes.forEach(b => b.active = false);
+            activeBoxId = null;
+            localStorage.removeItem('activeBoxId');
+            localStorage.setItem('cardBoxes', JSON.stringify(boxes));
+            updateActiveBoxBanners();
+            showToast('Box deactivated', 'info');
+            renderBoxList();
+        }
+
+        function deleteBox(boxId) {
+            const box = boxes.find(b => b.id === boxId);
+            if (!box) return;
+
+            if (box.cardsAdded > 0) {
+                showConfirm(
+                    `"${box.name}" has ${box.cardsAdded} cards. Delete anyway?`,
+                    () => {
+                        boxes = boxes.filter(b => b.id !== boxId);
+                        if (activeBoxId === boxId) {
+                            activeBoxId = null;
+                            localStorage.removeItem('activeBoxId');
+                        }
+                        localStorage.setItem('cardBoxes', JSON.stringify(boxes));
+                        updateActiveBoxBanners();
+                        renderBoxList();
+                        showToast('Box deleted', 'info');
+                    },
+                    'Delete Box'
+                );
+            } else {
+                boxes = boxes.filter(b => b.id !== boxId);
+                if (activeBoxId === boxId) {
+                    activeBoxId = null;
+                    localStorage.removeItem('activeBoxId');
+                }
+                localStorage.setItem('cardBoxes', JSON.stringify(boxes));
+                updateActiveBoxBanners();
+                renderBoxList();
+                showToast('Box deleted', 'info');
+            }
+        }
+
+        function updateActiveBoxBanners() {
+            const activeBox = boxes.find(b => b.id === activeBoxId);
+
+            // Update box break tab banner
+            const banner = document.getElementById('activeBoxBanner');
+            if (activeBox) {
+                banner.style.display = 'flex';
+                document.getElementById('activeBoxName').textContent = activeBox.name;
+                document.getElementById('activeBoxCost').textContent = activeBox.cost.toFixed(2);
+                document.getElementById('activeBoxMethod').textContent = getMethodName(activeBox.method);
+            } else {
+                banner.style.display = 'none';
+            }
+
+            // Update intake tab banner
+            const intakeBanner = document.getElementById('intakeActiveBoxBanner');
+            if (activeBox) {
+                intakeBanner.style.display = 'flex';
+                document.getElementById('intakeActiveBoxName').textContent = activeBox.name;
+            } else {
+                intakeBanner.style.display = 'none';
+            }
+
+            // Update cost basis field
+            updateCostBasisFromBox();
+        }
+
+        function updateCostBasisFromBox() {
+            const activeBox = boxes.find(b => b.id === activeBoxId);
+            const costBasisField = document.getElementById('costBasis');
+            const helpText = document.getElementById('costBasisHelp');
+
+            if (activeBox && activeBox.method === 'equal') {
+                const expectedCards = activeBox.expectedCards || (activeBox.cardsAdded + 1);
+                const costPerCard = activeBox.cost / expectedCards;
+                costBasisField.value = costPerCard.toFixed(2);
+                helpText.textContent = `Auto-calculated: $${activeBox.cost.toFixed(2)} ÷ ${expectedCards} cards = $${costPerCard.toFixed(2)}/card`;
+                helpText.style.color = '#48bb78';
+                helpText.style.fontWeight = '600';
+            } else if (activeBox && activeBox.method === 'zero-commons') {
+                costBasisField.value = '0.00';
+                helpText.textContent = 'Zero-cost commons method: Enter cost manually for hits only';
+                helpText.style.color = '#ed8936';
+                helpText.style.fontWeight = '600';
+            } else if (activeBox && activeBox.method === 'weighted') {
+                costBasisField.value = '';
+                helpText.textContent = 'Value-weighted method: Enter cost manually based on card value';
+                helpText.style.color = '#4299e1';
+                helpText.style.fontWeight = '600';
+            } else {
+                costBasisField.value = '';
+                helpText.textContent = 'Auto-calculated from active box, or enter manually';
+                helpText.style.color = '';
+                helpText.style.fontWeight = '';
+            }
+        }
+
+        function getMethodName(method) {
+            const names = {
+                'equal': 'Equal Distribution',
+                'weighted': 'Value-Weighted',
+                'zero-commons': 'Zero-Cost Commons'
+            };
+            return names[method] || method;
+        }
+
+        function renderBoxList() {
+            const container = document.getElementById('boxList');
+            if (boxes.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 40px;">No boxes yet. Create one above to get started!</p>';
+                return;
+            }
+
+            container.innerHTML = boxes.sort((a, b) => b.active - a.active).map(box => {
+                const costPerCard = box.expectedCards ? (box.cost / box.expectedCards).toFixed(2) : 'TBD';
+                const remaining = box.expectedCards ? box.expectedCards - box.cardsAdded : 'N/A';
+
+                return `
+                    <div class="box-item ${box.active ? 'active' : ''}">
+                        <div class="box-item-header">
+                            <div class="box-item-title">
+                                ${box.name}
+                                ${box.active ? '<span class="box-badge">ACTIVE</span>' : ''}
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                ${!box.active ? `<button class="action-btn" style="background: #48bb78; color: white; padding: 6px 12px; font-size: 13px;" onclick="activateBox('${box.id}')">Activate</button>` : ''}
+                                <button class="action-btn" style="background: #f56565; color: white; padding: 6px 12px; font-size: 13px;" onclick="deleteBox('${box.id}')">Delete</button>
+                            </div>
+                        </div>
+                        <div class="box-item-details">
+                            <div><strong>Total Cost:</strong> $${box.cost.toFixed(2)}</div>
+                            <div><strong>Method:</strong> ${getMethodName(box.method)}</div>
+                            <div><strong>Expected Cards:</strong> ${box.expectedCards || 'Dynamic'}</div>
+                            <div><strong>Cards Added:</strong> ${box.cardsAdded}</div>
+                            <div><strong>Remaining:</strong> ${remaining}</div>
+                            <div><strong>Cost/Card:</strong> $${costPerCard}</div>
+                        </div>
+                        <div style="font-size: 12px; color: var(--text-secondary); margin-top: 10px;">
+                            Created: ${box.createdAt}
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
         // Toast notification system
@@ -1442,8 +1780,9 @@
                 let tabBtn = null;
                 if (tabName === 'intake') tabBtn = document.querySelector('.tab:nth-child(1)');
                 if (tabName === 'inventory') tabBtn = document.querySelector('.tab:nth-child(2)');
-                if (tabName === 'dashboard') tabBtn = document.querySelector('.tab:nth-child(3)');
-                if (tabName === 'instructions') tabBtn = document.querySelector('.tab:nth-child(4)');
+                if (tabName === 'boxbreak') tabBtn = document.querySelector('.tab:nth-child(3)');
+                if (tabName === 'dashboard') tabBtn = document.querySelector('.tab:nth-child(4)');
+                if (tabName === 'instructions') tabBtn = document.querySelector('.tab:nth-child(5)');
                 if (tabBtn) tabBtn.classList.add('active');
             }
             document.getElementById(tabName).classList.add('active');
@@ -1453,6 +1792,10 @@
                 updateDashboard();
             } else if (tabName === 'intake') {
                 loadSmartDefaults();
+                updateActiveBoxBanners();
+            } else if (tabName === 'boxbreak') {
+                renderBoxList();
+                updateActiveBoxBanners();
             }
         }
 
@@ -1664,12 +2007,31 @@
                     shippingCost: '',
                     ebayFeeRate: '13.25',
                     uniqueId: generateUniqueId(),
-                    photos: photoDataArray
+                    photos: photoDataArray,
+                    boxId: activeBoxId || null // Track which box this card came from
                 };
 
                 inventory.push(formData);
                 localStorage.setItem('cardInventory', JSON.stringify(inventory));
                 saveToHistory();
+
+                // Increment box cardsAdded counter if there's an active box
+                if (activeBoxId) {
+                    const box = boxes.find(b => b.id === activeBoxId);
+                    if (box) {
+                        box.cardsAdded++;
+                        localStorage.setItem('cardBoxes', JSON.stringify(boxes));
+
+                        // Auto-deactivate if we've reached expected cards
+                        if (box.expectedCards && box.cardsAdded >= box.expectedCards) {
+                            showToast(`Box "${box.name}" complete! All ${box.expectedCards} cards added.`, 'success', 5000);
+                            deactivateBox();
+                        } else {
+                            // Update cost basis for next card
+                            updateCostBasisFromBox();
+                        }
+                    }
+                }
 
                 checkStorageSize();
 
@@ -1677,6 +2039,7 @@
                 this.reset();
                 // Reload smart defaults after reset
                 loadSmartDefaults();
+                updateCostBasisFromBox(); // Recalculate for next card
                 showTab('inventory');
             });
         });
@@ -2294,6 +2657,8 @@
             applyCompactView();
             loadSmartDefaults();
             initializeValidation();
+            updateActiveBoxBanners();
+            renderBoxList();
         });
     </script>
 </body>
