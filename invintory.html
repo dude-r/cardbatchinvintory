@@ -3230,14 +3230,38 @@
 
         function getHeaderIndex(headers, variants) {
             const normalizedVariants = variants.map(normalizeHeader);
-            return headers.findIndex(header => normalizedVariants.some(variant => {
-                if (!header || !variant) return false;
-                return header === variant || header.includes(variant) || variant.includes(header);
-            }));
+            let bestIndex = -1;
+            let bestScore = 0;
+
+            headers.forEach((header, idx) => {
+                const normalizedHeader = normalizeHeader(header);
+                if (!normalizedHeader) return;
+
+                normalizedVariants.forEach(variant => {
+                    if (!variant) return;
+
+                    let score = 0;
+                    if (normalizedHeader === variant) {
+                        score = 3; // exact match
+                    } else if (normalizedHeader.startsWith(variant) || variant.startsWith(normalizedHeader)) {
+                        score = 2; // prefix match
+                    } else if (normalizedHeader.includes(variant) || variant.includes(normalizedHeader)) {
+                        score = 1; // loose partial match
+                    }
+
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestIndex = idx;
+                    }
+                });
+            });
+
+            return bestIndex;
         }
 
         function normalizeHeader(header) {
-            return header.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+            if (!header) return '';
+            return header.toString().toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
         }
 
         // CSV Import
