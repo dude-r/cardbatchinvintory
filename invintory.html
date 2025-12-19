@@ -3229,7 +3229,8 @@
         }
 
         function getHeaderIndex(headers, variants) {
-            return headers.findIndex(header => variants.includes(header));
+            const normalizedVariants = variants.map(normalizeHeader);
+            return headers.findIndex(header => normalizedVariants.includes(header));
         }
 
         function normalizeHeader(header) {
