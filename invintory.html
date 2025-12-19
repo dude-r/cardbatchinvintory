@@ -3230,7 +3230,10 @@
 
         function getHeaderIndex(headers, variants) {
             const normalizedVariants = variants.map(normalizeHeader);
-            return headers.findIndex(header => normalizedVariants.includes(header));
+            return headers.findIndex(header => normalizedVariants.some(variant => {
+                if (!header || !variant) return false;
+                return header === variant || header.includes(variant) || variant.includes(header);
+            }));
         }
 
         function normalizeHeader(header) {
@@ -3398,6 +3401,7 @@
             };
 
             reader.readAsText(file);
+            event.target.value = '';
         }
 
         function importBankStatements(event) {
@@ -3441,6 +3445,7 @@
             };
 
             reader.readAsText(file);
+            event.target.value = '';
         }
 
         // Clear all data
