@@ -1548,7 +1548,26 @@
         // Global state
         let inventory = JSON.parse(localStorage.getItem('cardInventory')) || [];
         let history = JSON.parse(localStorage.getItem('cardHistory')) || [];
-        let historyIndex = -1;
+        let historyIndex = history.length > 0 ? history.length - 1 : -1;
+
+        // Keep inventory and history aligned across sessions without overwriting newer inventory data
+        if (history.length > 0) {
+            const latestHistory = history[history.length - 1];
+            const serializedInventory = JSON.stringify(inventory);
+
+            // If inventory is empty, restore from history; otherwise ensure history includes the latest inventory state
+            if (inventory.length === 0) {
+                inventory = JSON.parse(latestHistory);
+                localStorage.setItem('cardInventory', JSON.stringify(inventory));
+            } else if (latestHistory !== serializedInventory) {
+                history.push(serializedInventory);
+                if (history.length > 50) {
+                    history.shift();
+                }
+                historyIndex = history.length - 1;
+                localStorage.setItem('cardHistory', JSON.stringify(history));
+            }
+        }
         let selectedItems = new Set();
         let currentPage = 1;
         let totalPages = 1;
