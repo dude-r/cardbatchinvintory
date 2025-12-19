@@ -1255,6 +1255,10 @@
                     <button class="action-btn export-btn" onclick="exportToCSV()">📥 Export to CSV</button>
                     <button class="action-btn import-btn" onclick="document.getElementById('importFile').click()">📤 Import CSV</button>
                     <input type="file" id="importFile" style="display: none;" accept=".csv" onchange="importCSV(event)">
+                    <button class="action-btn import-btn" onclick="document.getElementById('importEbaySalesFile').click()">🛒 Import eBay Sales</button>
+                    <input type="file" id="importEbaySalesFile" style="display: none;" accept=".csv" onchange="importEbaySales(event)">
+                    <button class="action-btn import-btn" onclick="document.getElementById('importBankFile').click()">🏦 Import Bank CSV</button>
+                    <input type="file" id="importBankFile" style="display: none;" accept=".csv" onchange="importBankStatements(event)">
                     <button class="action-btn clear-btn" onclick="clearAllData()">🗑️ Clear All Data</button>
                     <button class="action-btn" style="background: #805ad5; color: white;" onclick="window.print()">🖨️ Print</button>
                 </div>
@@ -1548,7 +1552,28 @@
         // Global state
         let inventory = JSON.parse(localStorage.getItem('cardInventory')) || [];
         let history = JSON.parse(localStorage.getItem('cardHistory')) || [];
-        let historyIndex = -1;
+        let historyIndex = history.length > 0 ? history.length - 1 : -1;
+        let ebaySalesImports = JSON.parse(localStorage.getItem('ebaySalesImports')) || [];
+        let bankTransactions = JSON.parse(localStorage.getItem('bankTransactions')) || [];
+
+        // Keep inventory and history aligned across sessions without overwriting newer inventory data
+        if (history.length > 0) {
+            const latestHistory = history[history.length - 1];
+            const serializedInventory = JSON.stringify(inventory);
+
+            // If inventory is empty, restore from history; otherwise ensure history includes the latest inventory state
+            if (inventory.length === 0) {
+                inventory = JSON.parse(latestHistory);
+                localStorage.setItem('cardInventory', JSON.stringify(inventory));
+            } else if (latestHistory !== serializedInventory) {
+                history.push(serializedInventory);
+                if (history.length > 50) {
+                    history.shift();
+                }
+                historyIndex = history.length - 1;
+                localStorage.setItem('cardHistory', JSON.stringify(history));
+            }
+        }
         let selectedItems = new Set();
         let currentPage = 1;
         let totalPages = 1;
@@ -3173,6 +3198,44 @@
             document.body.removeChild(a);
         }
 
+        function parseCSVRows(text) {
+            const lines = text.trim().split(/\r?\n/).filter(line => line.trim().length > 0);
+            return lines.map(line => {
+                const values = [];
+                let current = '';
+                let inQuotes = false;
+
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+
+                    if (char === '"') {
+                        if (inQuotes && line[i + 1] === '"') {
+                            current += '"';
+                            i++;
+                        } else {
+                            inQuotes = !inQuotes;
+                        }
+                    } else if (char === ',' && !inQuotes) {
+                        values.push(current.trim());
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+
+                values.push(current.trim());
+                return values;
+            });
+        }
+
+        function getHeaderIndex(headers, variants) {
+            return headers.findIndex(header => variants.includes(header));
+        }
+
+        function normalizeHeader(header) {
+            return header.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+        }
+
         // CSV Import
         function importCSV(event) {
             const file = event.target.files[0];
@@ -3213,6 +3276,134 @@
                 updateDashboard();
                 showToast('Import successful!', 'success');
             };
+            reader.readAsText(file);
+        }
+
+        function importEbaySales(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const rows = parseCSVRows(e.target.result);
+                if (rows.length === 0) {
+                    showToast('No rows found in eBay sales file.', 'warning');
+                    return;
+                }
+
+                const headers = rows.shift().map(normalizeHeader);
+                const itemIdIndex = getHeaderIndex(headers, ['item id', 'item number']);
+                const skuIndex = getHeaderIndex(headers, ['custom label', 'custom label (sku)', 'sku', 'unique id']);
+                const soldPriceIndex = getHeaderIndex(headers, ['sold price', 'sale price', 'total price', 'total']);
+                const dateIndex = getHeaderIndex(headers, ['sale date', 'sold on', 'paid on', 'date']);
+                const shippingPaidIndex = getHeaderIndex(headers, ['shipping and handling', 'shipping paid', 'buyer paid shipping']);
+                const feesIndex = getHeaderIndex(headers, ['ebay fees', 'fees', 'selling fees']);
+                const titleIndex = getHeaderIndex(headers, ['title', 'item title']);
+
+                let matchedCount = 0;
+                let unmatchedCount = 0;
+                const importedSales = [];
+
+                rows.forEach(row => {
+                    if (row.length === 1 && row[0].trim() === '') return;
+
+                    const sale = {
+                        itemId: itemIdIndex !== -1 ? row[itemIdIndex] : '',
+                        customLabel: skuIndex !== -1 ? row[skuIndex] : '',
+                        soldPrice: soldPriceIndex !== -1 ? parseFloat(row[soldPriceIndex].replace(/[^0-9.-]/g, '')) || 0 : 0,
+                        saleDate: dateIndex !== -1 ? row[dateIndex] : '',
+                        shippingPaid: shippingPaidIndex !== -1 ? parseFloat(row[shippingPaidIndex].replace(/[^0-9.-]/g, '')) || 0 : 0,
+                        fees: feesIndex !== -1 ? parseFloat(row[feesIndex].replace(/[^0-9.-]/g, '')) || 0 : 0,
+                        title: titleIndex !== -1 ? row[titleIndex] : ''
+                    };
+
+                    if (!sale.soldPrice && !sale.itemId && !sale.customLabel) return;
+                    importedSales.push(sale);
+
+                    const matchIndex = inventory.findIndex(item => {
+                        const normalizedLabel = sale.customLabel ? sale.customLabel.toLowerCase() : '';
+                        return (
+                            (sale.itemId && item.ebayItemNumber === sale.itemId) ||
+                            (normalizedLabel && item.uniqueId && item.uniqueId.toLowerCase() === normalizedLabel) ||
+                            (normalizedLabel && item.ebayItemNumber && item.ebayItemNumber.toLowerCase() === normalizedLabel)
+                        );
+                    });
+
+                    if (matchIndex !== -1) {
+                        const item = inventory[matchIndex];
+                        item.soldPrice = sale.soldPrice ? sale.soldPrice.toString() : item.soldPrice;
+                        item.soldDate = sale.saleDate || item.soldDate || new Date().toISOString().split('T')[0];
+                        if (sale.shippingPaid) item.shippingRevenue = sale.shippingPaid.toString();
+                        if (!item.ebayItemNumber && sale.itemId) item.ebayItemNumber = sale.itemId;
+                        if (item.status !== '💰 Sold') item.status = '💰 Sold';
+                        matchedCount++;
+                    } else {
+                        unmatchedCount++;
+                    }
+                });
+
+                if (importedSales.length === 0) {
+                    showToast('No sales rows were detected in the file.', 'warning');
+                    return;
+                }
+
+                ebaySalesImports = ebaySalesImports.concat(importedSales).slice(-1000);
+                localStorage.setItem('ebaySalesImports', JSON.stringify(ebaySalesImports));
+                localStorage.setItem('cardInventory', JSON.stringify(inventory));
+
+                if (matchedCount > 0) {
+                    saveToHistory();
+                    renderInventory();
+                    updateDashboard();
+                }
+
+                const summary = `Imported ${importedSales.length} sales (${matchedCount} matched, ${unmatchedCount} unmatched).`;
+                showToast(summary, matchedCount > 0 ? 'success' : 'info');
+            };
+
+            reader.readAsText(file);
+        }
+
+        function importBankStatements(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const rows = parseCSVRows(e.target.result);
+                if (rows.length === 0) {
+                    showToast('No rows found in bank CSV.', 'warning');
+                    return;
+                }
+
+                const headers = rows.shift().map(normalizeHeader);
+                const dateIndex = getHeaderIndex(headers, ['date', 'posted date', 'transaction date']);
+                const descriptionIndex = getHeaderIndex(headers, ['description', 'memo', 'details']);
+                const amountIndex = getHeaderIndex(headers, ['amount', 'transaction amount', 'credit', 'debit']);
+                const categoryIndex = getHeaderIndex(headers, ['category', 'type', 'transaction type']);
+
+                const transactions = rows.map(row => {
+                    const amountRaw = amountIndex !== -1 ? row[amountIndex] : '0';
+                    const normalizedAmount = parseFloat(amountRaw.replace(/[^0-9.-]/g, '')) || 0;
+                    return {
+                        date: dateIndex !== -1 ? row[dateIndex] : new Date().toISOString().split('T')[0],
+                        description: descriptionIndex !== -1 ? row[descriptionIndex] : 'Bank transaction',
+                        amount: normalizedAmount,
+                        category: categoryIndex !== -1 ? row[categoryIndex] : 'Uncategorized'
+                    };
+                }).filter(txn => txn.description || txn.amount !== 0);
+
+                if (transactions.length === 0) {
+                    showToast('No valid transactions found to import.', 'warning');
+                    return;
+                }
+
+                bankTransactions = transactions.concat(bankTransactions).slice(0, 1000);
+                localStorage.setItem('bankTransactions', JSON.stringify(bankTransactions));
+
+                showToast(`Imported ${transactions.length} bank transactions.`, 'success');
+            };
+
             reader.readAsText(file);
         }
 
