@@ -3240,43 +3240,78 @@
         function importCSV(event) {
             const file = event.target.files[0];
             if (!file) return;
+
             const reader = new FileReader();
             reader.onload = function(e) {
-                const text = e.target.result;
-                const lines = text.split('\n');
-                const headers = lines[0].split(',').map(h => h.replace(/"/g, ''));
-                for (let i = 1; i < lines.length; i++) {
-                    if (lines[i].trim()) {
-                        const values = lines[i].split(',').map(v => v.replace(/"/g, ''));
-                        const item = {
-                            timestamp: values[0] || new Date().toLocaleString(),
-                            sport: values[1] || '',
-                            condition: values[2] || '',
-                            quantityType: values[3] || '',
-                            quantity: values[4] || '',
-                            description: values[5] || '',
-                            status: values[6] || '',
-                            notes: values[7] || '',
-                            submittedBy: values[8] || '',
-                            ebayItemNumber: values[9] || '',
-                            listPrice: values[10] || '',
-                            costBasis: values[11] || '0',
-                            ebayFeeRate: values[12] || '13.25',
-                            shippingMethod: values[13] || '',
-                            shippingCost: values[14] || '',
-                            uniqueId: values[16] || generateUniqueId(),
-                            photos: []
-                        };
-                        inventory.push(item);
-                    }
+                const rows = parseCSVRows(e.target.result);
+                if (rows.length === 0) {
+                    showToast('No rows found in CSV.', 'warning');
+                    return;
                 }
+
+                const headers = rows.shift().map(normalizeHeader);
+                const idx = {
+                    timestamp: getHeaderIndex(headers, ['timestamp']),
+                    sport: getHeaderIndex(headers, ['sport']),
+                    condition: getHeaderIndex(headers, ['condition']),
+                    quantityType: getHeaderIndex(headers, ['quantity type']),
+                    quantity: getHeaderIndex(headers, ['quantity']),
+                    description: getHeaderIndex(headers, ['description']),
+                    status: getHeaderIndex(headers, ['status']),
+                    notes: getHeaderIndex(headers, ['notes']),
+                    submittedBy: getHeaderIndex(headers, ['submitted by']),
+                    ebayItemNumber: getHeaderIndex(headers, ['ebay item #', 'item number']),
+                    listPrice: getHeaderIndex(headers, ['list price']),
+                    costBasis: getHeaderIndex(headers, ['cost basis']),
+                    ebayFeeRate: getHeaderIndex(headers, ['ebay fee rate']),
+                    shippingMethod: getHeaderIndex(headers, ['shipping method']),
+                    shippingCost: getHeaderIndex(headers, ['shipping cost']),
+                    uniqueId: getHeaderIndex(headers, ['unique id'])
+                };
+
+                const importedItems = [];
+
+                rows.forEach(row => {
+                    if (row.length === 1 && row[0].trim() === '') return;
+
+                    const item = {
+                        timestamp: idx.timestamp !== -1 ? row[idx.timestamp] : new Date().toLocaleString(),
+                        sport: idx.sport !== -1 ? row[idx.sport] : '',
+                        condition: idx.condition !== -1 ? row[idx.condition] : '',
+                        quantityType: idx.quantityType !== -1 ? row[idx.quantityType] : '',
+                        quantity: idx.quantity !== -1 ? row[idx.quantity] : '',
+                        description: idx.description !== -1 ? row[idx.description] : '',
+                        status: idx.status !== -1 ? row[idx.status] : '',
+                        notes: idx.notes !== -1 ? row[idx.notes] : '',
+                        submittedBy: idx.submittedBy !== -1 ? row[idx.submittedBy] : '',
+                        ebayItemNumber: idx.ebayItemNumber !== -1 ? row[idx.ebayItemNumber] : '',
+                        listPrice: idx.listPrice !== -1 ? row[idx.listPrice] : '',
+                        costBasis: idx.costBasis !== -1 ? row[idx.costBasis] || '0' : '0',
+                        ebayFeeRate: idx.ebayFeeRate !== -1 ? row[idx.ebayFeeRate] || '13.25' : '13.25',
+                        shippingMethod: idx.shippingMethod !== -1 ? row[idx.shippingMethod] : '',
+                        shippingCost: idx.shippingCost !== -1 ? row[idx.shippingCost] : '',
+                        uniqueId: idx.uniqueId !== -1 ? row[idx.uniqueId] || generateUniqueId() : generateUniqueId(),
+                        photos: []
+                    };
+
+                    importedItems.push(item);
+                    inventory.push(item);
+                });
+
+                if (importedItems.length === 0) {
+                    showToast('No valid inventory rows found in CSV.', 'warning');
+                    return;
+                }
+
                 localStorage.setItem('cardInventory', JSON.stringify(inventory));
                 saveToHistory();
                 renderInventory();
                 updateDashboard();
-                showToast('Import successful!', 'success');
+                showToast(`Imported ${importedItems.length} inventory rows.`, 'success');
             };
+
             reader.readAsText(file);
+            event.target.value = '';
         }
 
         function importEbaySales(event) {
